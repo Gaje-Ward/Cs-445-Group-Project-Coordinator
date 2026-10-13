@@ -13,3 +13,15 @@ Thumbs.db
 # Logs and temporary files
 *.log
 *.tmp
+
+# Commit only the safe configuration template
+!.env.example
+
+# Node, Next.js, generated code, test output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+src/generated/
+.tools/
