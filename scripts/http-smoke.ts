@@ -5,6 +5,10 @@ import { randomUUID, randomBytes } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { testDatabaseUrl } from "./test-database";
+import {
+  anonymousProjectChecks,
+  projectHttpChecks,
+} from "./project-http-checks";
 async function main() {
   const databaseUrl = testDatabaseUrl();
   const base = "http://localhost:3001";
@@ -97,6 +101,7 @@ async function main() {
     }
     assert.ok(ready, "Test server must start");
     await protectedRedirect();
+    await anonymousProjectChecks(request);
     assert.equal((await request("/api/auth/session")).status, 200);
     assert.deepEqual(await (await request("/api/auth/session")).json(), {});
     assert.equal(
@@ -199,6 +204,13 @@ async function main() {
     const unchanged = await update.json();
     assert.equal(unchanged.user.id, identity.id);
     assert.equal(unchanged.user.email, email);
+    await projectHttpChecks({
+      request,
+      csrf,
+      db,
+      base,
+      owner: { id: identity.id, email, password: input.password },
+    });
     const csrfToken = await csrf();
     const signedOut = await request("/api/auth/signout", {
       method: "POST",
@@ -211,6 +223,7 @@ async function main() {
     assert.equal(signedOut.status, 200);
     assert.deepEqual(await (await request("/api/auth/session")).json(), {});
     await protectedRedirect();
+    await anonymousProjectChecks(request);
     assert.equal((await request("/nonexistent-page")).status, 404);
     console.log(
       "HTTP smoke checks passed: registration, validation, duplicate email, login, logout, protected dashboard, session safety, origin/body limits, and 404.",
