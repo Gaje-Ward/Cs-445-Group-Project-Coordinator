@@ -4,7 +4,7 @@
 
 Group Project Coordinator is one Next.js application. App Router pages provide the interface, and Route Handlers provide the server endpoints. Keeping both in one project makes the application easier to manage as a solo developer.
 
-Most pages are React Server Components. The registration/login forms and logout button are Client Components because they need browser interaction. Tailwind CSS handles styling.
+Most pages are React Server Components. The registration/login/project forms and logout button are Client Components because they need browser interaction. Tailwind CSS handles styling.
 
 The source is organized into:
 
@@ -21,6 +21,22 @@ The generated Prisma client is ignored by Git and rebuilt during setup and build
 The registration form sends JSON to POST /api/register. The handler checks the origin, content type, 4 KiB body limit, request rate, and input schema before calling the user service. Prisma then creates the account. The response is not cached and includes only the user's id, name, and email.
 
 The login form calls Auth.js signIn, and the logout button calls signOut. Their requests go through /api/auth/[...nextauth]. Database access, password functions, and secrets stay in server-only modules so they cannot be imported into client code. Successful login sends the user to the dashboard.
+
+## Project requests
+
+The dashboard calls the project service directly after requireUser. The /projects/new, /projects/[id], and /projects/[id]/edit pages also require a session; detail pages check membership, and edit pages require OWNER. Missing and inaccessible records share a not-found view. Loading UI may start streaming before the check finishes, so page-level not-found can arrive with HTTP 200; the API always returns 404. No project details are included in the denied page.
+
+The project form sends POST /api/projects or PATCH /api/projects/[id]. GET on those paths lists the caller's projects or reads one authorized project. Every handler obtains identity from getServerSession. Mutations require JSON, exact configured Origin, and a streamed body of at most 16 KiB. Zod rejects extra fields and invalid values. Responses use no-store and return generic 503 messages for unexpected errors.
+
+Deadlines are optional calendar dates, stored at UTC midnight through PostgreSQL DATE and displayed as YYYY-MM-DD. They may be in the past. Empty optional values become null. React renders names/descriptions as text.
+
+## Project requests
+
+The dashboard calls the project service directly after requireUser. The /projects/new, /projects/[id], and /projects/[id]/edit pages also require a session; detail pages check membership, and edit pages require OWNER. Missing and inaccessible records share a not-found view. Loading UI may start streaming before the check finishes, so page-level not-found can arrive with HTTP 200; the API always returns 404. No project details are included in the denied page.
+
+The project form sends POST /api/projects or PATCH /api/projects/[id]. GET on those paths lists the caller's projects or reads one authorized project. Every handler obtains identity from getServerSession. Mutations require JSON, exact configured Origin, and a streamed body of at most 16 KiB. Zod rejects extra fields and invalid values. Responses use no-store and return generic 503 messages for unexpected errors.
+
+Deadlines are optional calendar dates, stored at UTC midnight through PostgreSQL DATE and displayed as YYYY-MM-DD. They may be in the past. Empty optional values become null. React renders names/descriptions as text.
 
 ## Registration and authentication
 
@@ -54,7 +70,11 @@ The initial migration creates the table and its unique email index. The Prisma P
 
 The CLI reads its connection settings from prisma.config.ts and the environment. The application passes DATABASE_URL to its runtime adapter.
 
-Later models, such as Project, Membership, Task, and Comment, will reference User. Those additions will need foreign keys and authorization checks for each project. The current schema only contains the User model. Stored user records must not be sent directly to the client because they contain passwordHash.
+Project stores a cuid ID, name (VARCHAR 120), optional description (VARCHAR 2000), optional deadline (DATE), and created/updated timestamps. ProjectMember has a compound primary key on projectId/userId, an index on userId, and an OWNER/MEMBER enum. These relationships support many projects per user and many members per project.
+
+The add_projects_and_memberships migration only adds the enum, tables, indexes, and foreign keys. It does not change or delete existing User records. Deleting a project cascades its memberships. Deleting a user with memberships is restricted so an owner cannot disappear accidentally. There are no deletion or membership-management endpoints yet; future owner removal must deliberately preserve ownership.
+
+The project service creates a project with a nested OWNER membership inside a transaction. Lists and individual reads filter by session user membership; only the caller's role is selected, without other members' identities. Edits use an OWNER membership predicate in updateMany inside a transaction, then return the saved public project fields. A zero-row edit and an inaccessible read use the same ProjectNotFoundError. No client user ID determines authorization. Stored User records are never sent directly to the client because they contain passwordHash.
 
 ## Local development and tests
 

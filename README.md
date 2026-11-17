@@ -8,11 +8,11 @@
 
 Group Project Coordinator is a web application for students working on group assignments. The planned features include shared projects, tasks, files, idea voting, and weekly check-ins. A project-health dashboard will help teams spot overdue work, blockers, and requests for help.
 
-The application currently provides the foundation and email/password authentication. Project-management features are planned next.
+The application provides email/password authentication and project creation, viewing, and owner-only editing. Tasks and teammate invitations are still planned.
 
 ## Current status
 
-The homepage, registration, login, logout, and protected dashboard were verified on Windows on October 8, 2026. PostgreSQL runs through Docker Compose, and the initial Prisma migration has been applied. The application has not been deployed.
+Sprint 1 authentication was verified on October 8, 2026. Sprint 2 adds project creation, membership-based viewing, and owner-only editing. The project migration has been applied without resetting existing development data. See [Sprint 2 results](docs/SPRINT_2.md) for the October 12 checks. The application has not been deployed.
 
 See [the implementation report](docs/IMPLEMENTATION.md) for the results and remaining work, and the [dependency audit](docs/DEPENDENCY_AUDIT.md) for the unresolved package findings.
 
@@ -58,9 +58,9 @@ npm.cmd run db:deploy
 npm.cmd run dev
 ```
 
-Open **http://localhost:3000**, create an account, and log in to reach the dashboard. The dashboard has a Log out button. Port 5433 is for PostgreSQL connections; the website runs on port 3000.
+Open **http://localhost:3000**, create an account, and log in to reach the dashboard. The dashboard lists your projects and has Create project and Log out controls. A project can have a name (2–120 characters), an optional description (up to 2,000 characters), and an optional calendar deadline. Its creator becomes the owner and can edit it; members can view it. Port 5433 is for PostgreSQL connections; the website runs on port 3000.
 
-The setup script creates an ignored .env file with random local credentials. If the file already exists, it leaves it alone. This workspace already has a generated file.
+The setup script creates an ignored .env file with random local credentials. If the file already exists, it leaves it alone.
 
 You can also copy .env.example to .env and replace the placeholders yourself. To generate a secret, run:
 
@@ -88,7 +88,7 @@ Stop the app with Ctrl+C. Use docker compose stop db to stop the database while 
 | test                                  | Unit/UI tests; mocked persistence and session APIs                 |
 | test:watch                            | Watch unit tests                                                   |
 | test:integration                      | Real dedicated-database tests                                      |
-| test:http                             | Built-server HTTP authentication checks on port 3001               |
+| test:http                             | Built-server HTTP authentication/project checks on port 3001       |
 | db:generate                           | Generate ignored Prisma client                                     |
 | db:deploy                             | Apply existing migrations, without resetting data                  |
 | db:migrate -- --name descriptive_name | Create/apply a new development migration                           |
@@ -102,6 +102,7 @@ To try the production build locally, stop the development server, run npm.cmd ru
 ```powershell
 npm.cmd run typecheck
 npm.cmd run lint
+npm.cmd run format:check
 npm.cmd test
 npm.cmd run build
 docker compose --profile test up -d --wait db-test
@@ -122,15 +123,21 @@ Auth.js handles email/password login and encrypted JWT sessions, which last up t
 
 Auth.js handles CSRF protection for login and logout. Registration accepts JSON from the configured origin, limits the body to 4 KiB, and limits request attempts. Login attempts are also limited. These limits live in one application process and will need shared storage before running multiple instances. Auth.js manages HttpOnly/SameSite cookies and enables secure cookies when the configured URL uses HTTPS. Deployment will require HTTPS.
 
+## Project access
+
+Pages and API endpoints use the signed-in session identity. The server filters project lists and reads by membership and allows edits only through an OWNER membership. Inaccessible and missing projects receive the same not-found response. Project mutation endpoints require JSON from the configured origin, enforce a 16 KiB body limit, and reject client identity or role fields. Database errors return a generic message.
+
+Project creation and its owner membership use one database transaction. Memberships are unique per project/user. Deleting a project cascades its memberships; deleting a user with any membership is restricted. There is no deletion, invitation, or role-change interface yet. Deadlines use PostgreSQL DATE and display as YYYY-MM-DD, with no time zone conversion; past dates are allowed.
+
 ## Repository layout
 
 ```text
 src/app/                  Pages and Route Handlers
-src/components/           Interactive login/registration/logout UI
+src/components/           Interactive authentication and project forms
 src/lib/                  Validation, persistence, passwords, auth, sessions
 src/types/                Session type extension
-prisma/schema.prisma      User schema
-prisma/migrations/        Versioned initial SQL migration
+prisma/schema.prisma      User, Project, and ProjectMember schema
+prisma/migrations/        Versioned SQL migrations
 scripts/                  Safe env/test setup and HTTP verification
 tests/unit/               Isolated logic and UI tests
 tests/integration/        Real PostgreSQL tests

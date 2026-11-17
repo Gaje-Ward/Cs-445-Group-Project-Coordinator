@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, and the application foundation. The MVP, advanced features, and integrations below are plans for later work.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, and MVP-01 project creation/viewing/editing. Teammate management, tasks, advanced features, and integrations remain planned.
 
 ## Current functional requirements
 
@@ -34,11 +34,22 @@ Group Project Coordinator is for students working on group assignments. The curr
 
 The setup guide uses a Windows path as an example, but the application code does not depend on it. The [implementation report](IMPLEMENTATION.md) records the current rate-limit and dependency limitations.
 
-## Future MVP (planned)
+## Project requirements — MVP-01
+
+- Signed-in users can create projects with a name, optional description, and optional deadline. The server trims text, requires a 2–120 character name, limits descriptions to 2,000 characters, and validates real calendar dates. Unknown fields are rejected.
+- Creating a project also creates its OWNER membership in the same transaction. A failed membership insert leaves no project behind.
+- Users see only projects they belong to, including a helpful empty dashboard. Members can read a project; only owners can edit it. Every page and endpoint checks the session and permissions on the server.
+- Missing and inaccessible projects produce the same not-found response. Anonymous pages redirect to login; anonymous API requests return 401.
+- Memberships have OWNER/MEMBER roles and a unique project/user key. User deletion is restricted while memberships exist, and project deletion cascades only its memberships.
+- Create/edit forms have labels, pending states, field errors, connection feedback, and success links. Server errors do not reveal internal details.
+
+MVP-01 results and test evidence are in [SPRINT_2.md](SPRINT_2.md). The membership model supports these checks, but teammate invitations and membership changes are not part of this sprint.
+
+## MVP status
 
 | ID     | Functional requirement                                                   |
 | ------ | ------------------------------------------------------------------------ |
-| MVP-01 | Create/edit projects with a name, description, and deadline              |
+| MVP-01 | Create/view/edit projects with ownership; implemented/verified           |
 | MVP-02 | Add/remove teammates and check owner/member permissions for each project |
 | MVP-03 | Create/assign/update tasks with status, assignee, and due date           |
 | MVP-04 | Show project deadlines and progress based on task completion             |

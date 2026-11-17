@@ -63,7 +63,7 @@ SEC-01 tracks this work before public deployment. The [audit](DEPENDENCY_AUDIT.m
 
 ## What still needs work
 
-- Project management, memberships, tasks, files, comments, voting, check-ins, workload views, dependencies, project health, notifications, analytics, and Discord are still future work.
+- At the Sprint 1 checkpoint, project features were still planned. Sprint 2 now implements MVP-01; see [SPRINT_2.md](SPRINT_2.md). Teammate management, tasks, files, comments, voting, check-ins, workload views, dependencies, project health, notifications, analytics, and Discord remain planned.
 - Email verification, password reset, account disabling, and central JWT revocation are not implemented. Logout removes the browser cookie; a stolen token can remain valid until it expires.
 - Request limits reset on restart and are not shared between application instances. Deployment will need shared limits and HTTPS.
 - Ubuntu deployment is planned. The app still needs a Dockerfile and deployment setup.
@@ -80,7 +80,7 @@ SEC-01 tracks this work before public deployment. The [audit](DEPENDENCY_AUDIT.m
 - [x] Setup and course documentation are available.
 - [x] Unit/UI, database, and HTTP checks pass.
 - [x] Type checking, lint, and the production build pass.
-- [ ] Application and initial migration saved in Git.
+- [x] Application and initial migration saved in Git (Sprint 1 checkpoint 1f59e38).
 - [ ] Dependency maintenance completed before public deployment.
 
 ## What I learned
