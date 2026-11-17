@@ -10,8 +10,9 @@ export default function Home() {
       </h1>
       <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
         Group Project Coordinator helps student teams organize their work.
-        Create your account today; projects, tasks, and team check-ins will
-        arrive in future sprints.
+        Create an account to start a project and keep its description and
+        deadline in one place. Tasks and team check-ins are planned for later
+        sprints.
       </p>
       <div className="mt-8 flex flex-wrap gap-4">
         <Link
@@ -28,7 +29,8 @@ export default function Home() {
         </Link>
       </div>
       <p className="mt-10 text-sm text-slate-500">
-        Sprint 1: application foundation and secure authentication.
+        Available now: secure authentication and project creation, viewing, and
+        editing.
       </p>
     </section>
   );

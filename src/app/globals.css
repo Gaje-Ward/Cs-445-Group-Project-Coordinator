@@ -9,7 +9,8 @@ body {
 }
 a,
 button,
-input {
+input,
+textarea {
   outline-offset: 4px;
 }
 button {
@@ -19,7 +20,8 @@ button:disabled {
   cursor: wait;
   opacity: 0.6;
 }
-input {
+input,
+textarea {
   width: 100%;
   border: 1px solid #94a3b8;
   border-radius: 0.5rem;
