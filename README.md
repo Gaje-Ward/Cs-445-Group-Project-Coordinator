@@ -4,6 +4,10 @@
 
 - Gaje Ward — solo developer, CS445 Software Engineering I.
 
+## Interface design
+
+The website's visual design and page layouts were created with OpenAI Codex, an AI coding assistant.
+
 ## Project Abstract
 
 Group Project Coordinator is a web application for students working on group assignments. The planned features include shared projects, tasks, files, idea voting, and weekly check-ins. A project-health dashboard will help teams spot overdue work, blockers, and requests for help.
