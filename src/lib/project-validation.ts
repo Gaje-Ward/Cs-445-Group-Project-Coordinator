@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Deadlines are calendar dates, stored at UTC midnight without a time-of-day.
-const deadline = z
+export const calendarDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date in YYYY-MM-DD format.")
   .refine((value) => {
@@ -27,7 +27,7 @@ export const projectSchema = z
       .optional()
       .nullable(),
     deadline: z
-      .union([deadline, z.literal("")])
+      .union([calendarDateSchema, z.literal("")])
       .optional()
       .nullable(),
   })

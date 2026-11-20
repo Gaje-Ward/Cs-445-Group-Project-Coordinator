@@ -5,7 +5,32 @@ import { getServerSession } from "next-auth";
 import { projectReply, projectRequest } from "@/lib/project-http";
 import { ProjectNotFoundError } from "@/lib/project-service";
 import { projectSchema } from "@/lib/project-validation";
+import { MemberChangeError } from "@/lib/member-service";
+import { TaskNotFoundError, TaskAssignmentError } from "@/lib/task-service";
 afterEach(() => vi.resetAllMocks());
+it("returns safe task lookup and assignment feedback", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({ user: { id: "verified" } });
+  for (const [error, status] of [
+    [new TaskNotFoundError(), 404],
+    [new TaskAssignmentError(), 409],
+  ] as const) {
+    const response = await projectRequest(async () => {
+      throw error;
+    });
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual({ error: error.message });
+  }
+});
+it("returns expected membership errors without treating them as outages", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({ user: { id: "verified" } });
+  for (const status of [400, 404, 409] as const) {
+    const response = await projectRequest(async () => {
+      throw new MemberChangeError("Membership feedback", status);
+    });
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual({ error: "Membership feedback" });
+  }
+});
 it("rejects anonymous requests before invoking persistence", async () => {
   vi.mocked(getServerSession).mockResolvedValue(null);
   const action = vi.fn();

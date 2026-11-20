@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { ZodError } from "zod";
 import { ProjectNotFoundError } from "./project-service";
+import { MemberChangeError } from "./member-service";
+import { TaskNotFoundError, TaskAssignmentError } from "./task-service";
 
 export const projectReply = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -23,6 +25,12 @@ export async function projectRequest(
       return projectReply({ error: "Please log in." }, 401);
     return await action(session.user.id);
   } catch (error) {
+    if (error instanceof TaskNotFoundError)
+      return projectReply({ error: error.message }, 404);
+    if (error instanceof TaskAssignmentError)
+      return projectReply({ error: error.message }, 409);
+    if (error instanceof MemberChangeError)
+      return projectReply({ error: error.message }, error.status);
     if (error instanceof RequestError)
       return projectReply({ error: error.message }, error.status);
     if (error instanceof ProjectNotFoundError)
