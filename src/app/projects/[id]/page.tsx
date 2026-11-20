@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { members } from "@/lib/members";
+import { ProjectMembers } from "@/components/project-members";
+import { ProjectTasks } from "@/components/project-tasks";
+import { tasks } from "@/lib/tasks";
 import { requireUser } from "@/lib/session";
 import { projects } from "@/lib/projects";
 import { ProjectNotFoundError } from "@/lib/project-service";
@@ -12,8 +16,12 @@ export default async function ProjectPage({
   const user = await requireUser();
   const { id } = await params;
   let project;
+  let team;
+  let projectTasks;
   try {
     project = await projects.get(user.id, id);
+    team = await members.list(user.id, id);
+    projectTasks = await tasks.list(user.id, id);
   } catch (error) {
     if (error instanceof ProjectNotFoundError) notFound();
     throw error;
@@ -48,6 +56,20 @@ export default async function ProjectPage({
           </Link>
         )}
       </div>
+      <ProjectTasks
+        projectId={id}
+        members={team}
+        tasks={projectTasks.map((task) => ({
+          ...task,
+          dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
+        }))}
+        canDelete={project.role === "OWNER"}
+      />
+      <ProjectMembers
+        projectId={id}
+        members={team}
+        canManage={project.role === "OWNER"}
+      />
     </section>
   );
 }

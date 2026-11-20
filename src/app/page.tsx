@@ -9,10 +9,9 @@ export default function Home() {
         Keep your group project moving.
       </h1>
       <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-        Group Project Coordinator helps student teams organize their work.
-        Create an account to start a project and keep its description and
-        deadline in one place. Tasks and team check-ins are planned for later
-        sprints.
+        Group Project Coordinator helps student teams organize their work. Start
+        a project with your teammates and keep assignments and due dates in one
+        place. Update task status as the work moves forward.
       </p>
       <div className="mt-8 flex flex-wrap gap-4">
         <Link
@@ -29,8 +28,7 @@ export default function Home() {
         </Link>
       </div>
       <p className="mt-10 text-sm text-slate-500">
-        Available now: secure authentication and project creation, viewing, and
-        editing.
+        Create your workspace and start planning the work together.
       </p>
     </section>
   );
