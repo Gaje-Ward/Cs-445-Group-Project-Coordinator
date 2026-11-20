@@ -30,13 +30,25 @@ The project form sends POST /api/projects or PATCH /api/projects/[id]. GET on th
 
 Deadlines are optional calendar dates, stored at UTC midnight through PostgreSQL DATE and displayed as YYYY-MM-DD. They may be in the past. Empty optional values become null. React renders names/descriptions as text.
 
-## Project requests
+## Teammate requests
 
-The dashboard calls the project service directly after requireUser. The /projects/new, /projects/[id], and /projects/[id]/edit pages also require a session; detail pages check membership, and edit pages require OWNER. Missing and inaccessible records share a not-found view. Loading UI may start streaming before the check finishes, so page-level not-found can arrive with HTTP 200; the API always returns 404. No project details are included in the denied page.
+The project page loads a member roster after checking project access. The Team client component renders names and roles for members and shows add/remove controls only to owners. It sends POST or DELETE to /api/projects/[id]/members, then refreshes the server-rendered page after success. GET on the same endpoint reads the roster.
 
-The project form sends POST /api/projects or PATCH /api/projects/[id]. GET on those paths lists the caller's projects or reads one authorized project. Every handler obtains identity from getServerSession. Mutations require JSON, exact configured Origin, and a streamed body of at most 16 KiB. Zod rejects extra fields and invalid values. Responses use no-store and return generic 503 messages for unexpected errors.
+The member service checks the acting owner's membership before looking up an email or changing the team. Adds normalize the email through the registration schema, assign MEMBER, and use the unique membership key to reject duplicates even under concurrent requests. Removals require MEMBER and include the acting owner's membership in the delete condition. Attempts to remove an owner return a conflict response.
 
-Deadlines are optional calendar dates, stored at UTC midnight through PostgreSQL DATE and displayed as YYYY-MM-DD. They may be in the past. Empty optional values become null. React renders names/descriptions as text.
+The roster selects only userId, name, and project role. It does not return account email addresses or password hashes. Mutations share the project's strict origin, JSON, and 16 KiB input checks. Extra client identity and role fields are rejected. Existing sessions lose access on subsequent reads after membership removal because permissions come from the database rather than the JWT.
+
+No schema change is needed. Email invitations, role changes, and ownership transfer are not implemented. Lists are not paginated, and membership changes do not yet have a dedicated rate limit.
+
+## Task requests and storage
+
+Task routes are nested under /api/projects/[id]/tasks. GET lists tasks for a member and POST creates one. PATCH and DELETE on /api/projects/[id]/tasks/[taskId] change a task or remove it. Every operation checks the current membership from the server session. Members can create and edit work; deletion requires OWNER. Task IDs are always scoped to their project.
+
+Tasks store a title, optional description and due date, and a TODO/IN_PROGRESS/DONE status. Status-only edits preserve the other fields. Dates use the same calendar-date validation as project deadlines. The interface refreshes the server-rendered task list after successful changes and keeps unsaved form values after errors.
+
+The add_tasks migration creates the Task table, status enum, and indexes. Its project foreign key cascades cleanup when a project is deleted. Assignees reference the compound ProjectMember key through nullable assigneeProjectId/assigneeId fields. A SQL CHECK constraint requires that key to match the task's project or be entirely null. Deleting a membership sets both assignment fields to null, preserving the task. The duplicate project field lets PostgreSQL clear an assignment without clearing the task's required projectId.
+
+The public task response includes the assignee's display name, but does not return the internal assignment project key, account email, or password hash. Foreign-key conflicts caused by concurrent teammate removal give a safe assignment message. Mutation requests use the existing origin, JSON, and body-size checks.
 
 ## Registration and authentication
 
@@ -72,7 +84,7 @@ The CLI reads its connection settings from prisma.config.ts and the environment.
 
 Project stores a cuid ID, name (VARCHAR 120), optional description (VARCHAR 2000), optional deadline (DATE), and created/updated timestamps. ProjectMember has a compound primary key on projectId/userId, an index on userId, and an OWNER/MEMBER enum. These relationships support many projects per user and many members per project.
 
-The add_projects_and_memberships migration only adds the enum, tables, indexes, and foreign keys. It does not change or delete existing User records. Deleting a project cascades its memberships. Deleting a user with memberships is restricted so an owner cannot disappear accidentally. There are no deletion or membership-management endpoints yet; future owner removal must deliberately preserve ownership.
+The add_projects_and_memberships migration only adds the enum, tables, indexes, and foreign keys. It does not change or delete existing User records. Deleting a project cascades its memberships. Deleting a user with memberships is restricted so an owner cannot disappear accidentally. There is no project-deletion endpoint yet. Membership-management endpoints allow owners to add registered accounts and remove only ordinary members; ownership cannot be removed or transferred.
 
 The project service creates a project with a nested OWNER membership inside a transaction. Lists and individual reads filter by session user membership; only the caller's role is selected, without other members' identities. Edits use an OWNER membership predicate in updateMany inside a transaction, then return the saved public project fields. A zero-row edit and an inaccessible read use the same ProjectNotFoundError. No client user ID determines authorization. Stored User records are never sent directly to the client because they contain passwordHash.
 
