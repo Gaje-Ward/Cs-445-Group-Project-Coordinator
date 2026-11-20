@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, and MVP-01 project creation/viewing/editing. Teammate management, tasks, advanced features, and integrations remain planned.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, and MVP-03 tasks. Progress summaries, advanced features, and integrations remain planned.
 
 ## Current functional requirements
 
@@ -44,6 +44,30 @@ The setup guide uses a Windows path as an example, but the application code does
 - Create/edit forms have labels, pending states, field errors, connection feedback, and success links. Server errors do not reveal internal details.
 
 MVP-01 results and test evidence are in [SPRINT_2.md](SPRINT_2.md). The membership model supports these checks, but teammate invitations and membership changes are not part of this sprint.
+
+## Teammate requirements — MVP-02
+
+- Project members can see a roster of teammate names and project roles. Outsiders cannot read it. Responses exclude account emails and password hashes.
+- Only owners can add registered users by email. Email input follows the same normalization rules as registration. Unknown accounts receive a helpful error; extra identity or role fields are rejected.
+- Adding a person gives them the MEMBER role. The unique project/user key prevents duplicates, including simultaneous requests. Adding the owner again cannot change their role.
+- Only owners can remove ordinary members. Removing the owner is rejected. Removal affects only the named project and keeps the user's account intact.
+- Every roster read and membership change checks current membership in the database. A removed user loses access to project pages, project APIs, and the roster on subsequent requests. Their dashboard no longer lists the project.
+- Membership mutations require JSON from the configured origin and share the existing 16 KiB body limit. Authorization uses the server session, never a client-supplied actor or role.
+- Owners get an email form and a removal confirmation. Pending and error feedback is accessible, and failed requests preserve entered values. Members get a read-only roster.
+
+This increment reuses the existing schema and needs no database migration. Email invitations, role changes, and ownership transfer remain outside its scope. Automated checks passed; visual review is still pending. See [SPRINT_3.md](SPRINT_3.md).
+
+## Task requirements — MVP-03
+
+- Current project members can create tasks with a required title of 2–160 characters. Descriptions are optional and limited to 4,000 characters. Due dates are optional real calendar dates, stored as PostgreSQL DATE. Empty optional fields become null.
+- Status is To do, In progress, or Done. New tasks default to To do. Members can reopen completed work, edit task details, change assignments, and clear optional fields. A status-only update preserves the other fields.
+- Assignees must be current members of the same project. A database constraint enforces this even if assignment races with teammate removal. Removing a member clears their assignments without deleting the tasks.
+- Task reads and writes use the session identity and check project membership. A task ID from another project cannot be read through the project's list or changed through its endpoints. Former members lose access on subsequent requests.
+- Only project owners can delete tasks. The interface requires confirmation. Removing a task does not affect another project's data.
+- Mutation requests require JSON from the configured origin, share the 16 KiB body limit, and reject extra fields such as client identity, project ID, or role. Expected input and assignment errors give useful feedback without exposing database details.
+- Forms have labels, pending states, and field feedback. Connection failures preserve entered work. The task list offers a direct status control; deletion controls appear only for the owner.
+
+Automated checks passed. Browser layout and keyboard review remain pending. Task dependencies, attachments, and comments are not part of this increment.
 
 ## MVP status
 

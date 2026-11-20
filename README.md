@@ -12,11 +12,15 @@ The website's visual design and page layouts were created with OpenAI Codex, an 
 
 Group Project Coordinator is a web application for students working on group assignments. The planned features include shared projects, tasks, files, idea voting, and weekly check-ins. A project-health dashboard will help teams spot overdue work, blockers, and requests for help.
 
-The application provides email/password authentication and project creation, viewing, and owner-only editing. Tasks and teammate invitations are still planned.
+The application provides email/password authentication and project creation, viewing, and owner-only editing. Owners can add registered users to their projects and remove members. Teammates can create tasks and update assignments, due dates, and status.
 
 ## Current status
 
 Sprint 1 authentication was verified on October 8, 2026. Sprint 2 adds project creation, membership-based viewing, and owner-only editing. The project migration has been applied without resetting existing development data. See [Sprint 2 results](docs/SPRINT_2.md) for the October 12 checks. The application has not been deployed.
+
+Sprint 3 adds teammate management and tasks. Open a project to use its Tasks and Team sections. As the owner, enter a teammate's registered email address to add them. Members see the shared project on their dashboards; removing them revokes access on subsequent requests. The owner cannot be removed. See [the Sprint 3 notes](docs/SPRINT_3.md) for verification results and remaining work.
+
+Use Add task to enter a title and optional description, then choose an assignee and due date if needed. Any current member can edit tasks or move them between To do, In progress, and Done. Only the owner can delete tasks, with confirmation. Removing a teammate leaves their tasks in the project as unassigned work.
 
 See [the implementation report](docs/IMPLEMENTATION.md) for the results and remaining work, and the [dependency audit](docs/DEPENDENCY_AUDIT.md) for the unresolved package findings.
 
@@ -131,7 +135,9 @@ Auth.js handles CSRF protection for login and logout. Registration accepts JSON 
 
 Pages and API endpoints use the signed-in session identity. The server filters project lists and reads by membership and allows edits only through an OWNER membership. Inaccessible and missing projects receive the same not-found response. Project mutation endpoints require JSON from the configured origin, enforce a 16 KiB body limit, and reject client identity or role fields. Database errors return a generic message.
 
-Project creation and its owner membership use one database transaction. Memberships are unique per project/user. Deleting a project cascades its memberships; deleting a user with any membership is restricted. There is no deletion, invitation, or role-change interface yet. Deadlines use PostgreSQL DATE and display as YYYY-MM-DD, with no time zone conversion; past dates are allowed.
+Project creation and its owner membership use one database transaction. Memberships are unique per project/user. Owners can add existing accounts by email and remove ordinary members; members cannot change the team. The roster shows names and project roles without sharing account emails or password hashes. Adding someone gives them access immediately; this is not an email invitation or an acceptance workflow.
+
+Deleting a project cascades its memberships; deleting a user with any membership is restricted. There is no project deletion or ownership-transfer interface yet. Deadlines use PostgreSQL DATE and display as YYYY-MM-DD, with no time zone conversion; past dates are allowed.
 
 ## Repository layout
 
