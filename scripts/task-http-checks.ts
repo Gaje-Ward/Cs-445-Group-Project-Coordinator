@@ -179,6 +179,10 @@ export async function taskHttpChecks({
 
   await login(member.email);
   assert.equal((await request(path)).status, 404);
+  assert.deepEqual(
+    (await (await request("/api/projects")).json()).projects,
+    [],
+  );
   assert.equal(
     (await write(taskPath, "PATCH", { status: "TODO" })).status,
     404,

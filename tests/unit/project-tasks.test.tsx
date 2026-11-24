@@ -25,6 +25,104 @@ afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
+
+it("marks only unfinished past-due work and filters the list without changing tasks", async () => {
+  const fetcher = vi.fn();
+  vi.stubGlobal("fetch", fetcher);
+  const items: TaskView[] = [
+    { ...task, id: "late", title: "Late draft", dueDate: "2026-11-21" },
+    { ...task, id: "today", title: "Due today", dueDate: "2026-11-22" },
+    {
+      ...task,
+      id: "done",
+      title: "Finished draft",
+      status: "DONE",
+      dueDate: "2026-11-20",
+    },
+    { ...task, id: "undated", title: "Undated draft", dueDate: null },
+  ];
+  render(
+    <ProjectTasks
+      projectId="p1"
+      members={members}
+      tasks={items}
+      canDelete
+      today="2026-11-22"
+      calendarLabel="Central Time"
+    />,
+  );
+  expect(screen.getByText("1 of 4 tasks completed")).toBeVisible();
+  expect(screen.getByText("1 overdue")).toBeVisible();
+  expect(screen.getAllByText("Overdue", { exact: true })).toHaveLength(1);
+  expect(screen.getByText("Due dates follow Central Time.")).toBeVisible();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("checkbox", { name: "Overdue only" }));
+  expect(screen.getByRole("heading", { name: "Late draft" })).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "Due today" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Finished draft" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Undated draft" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("1 of 4 tasks completed")).toBeVisible();
+  await user.click(screen.getByRole("checkbox", { name: "Overdue only" }));
+  expect(screen.getByRole("heading", { name: "Due today" })).toBeVisible();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("updates the summary from refreshed task props and handles an empty overdue filter", async () => {
+  const overdueTask = { ...task, dueDate: "2026-11-21" };
+  const view = render(
+    <ProjectTasks
+      projectId="p1"
+      members={members}
+      tasks={[overdueTask]}
+      canDelete
+      today="2026-11-22"
+    />,
+  );
+  await userEvent
+    .setup()
+    .click(screen.getByRole("checkbox", { name: "Overdue only" }));
+  view.rerender(
+    <ProjectTasks
+      projectId="p1"
+      members={members}
+      tasks={[{ ...overdueTask, status: "DONE" }]}
+      canDelete
+      today="2026-11-22"
+    />,
+  );
+  expect(screen.getByText("1 of 1 task completed")).toBeVisible();
+  expect(screen.getByText("100%")).toBeVisible();
+  expect(screen.getByText("No overdue tasks.")).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "Draft report" }),
+  ).not.toBeInTheDocument();
+});
+
+it("clears the overdue filter when starting a new task so the new work is not hidden", async () => {
+  render(
+    <ProjectTasks
+      projectId="p1"
+      members={members}
+      tasks={[task]}
+      canDelete
+      today="2026-11-22"
+    />,
+  );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("checkbox", { name: "Overdue only" }));
+  expect(screen.getByText("No overdue tasks.")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Add task" }));
+  expect(
+    screen.getByRole("checkbox", { name: "Overdue only" }),
+  ).not.toBeChecked();
+  expect(screen.getByLabelText("Task title")).toBeVisible();
+});
 function savedResponse() {
   return { ok: true, json: async () => ({ task: { id: "t1" } }) };
 }
@@ -174,7 +272,13 @@ it("opens and cancels the empty-list task form without making a request", async 
   const fetcher = vi.fn();
   vi.stubGlobal("fetch", fetcher);
   render(
-    <ProjectTasks projectId="p1" members={members} tasks={[]} canDelete />,
+    <ProjectTasks
+      today="2026-11-22"
+      projectId="p1"
+      members={members}
+      tasks={[]}
+      canDelete
+    />,
   );
   expect(screen.getByText(/No tasks yet/)).toBeVisible();
   const user = userEvent.setup();
@@ -190,6 +294,7 @@ it("allows member editing and status changes but hides deletion controls", async
   vi.stubGlobal("fetch", fetcher);
   render(
     <ProjectTasks
+      today="2026-11-22"
       projectId="p1"
       members={members}
       tasks={[task]}
@@ -226,7 +331,13 @@ it("shows status failures without claiming success or refreshing", async () => {
     }),
   );
   render(
-    <ProjectTasks projectId="p1" members={members} tasks={[task]} canDelete />,
+    <ProjectTasks
+      today="2026-11-22"
+      projectId="p1"
+      members={members}
+      tasks={[task]}
+      canDelete
+    />,
   );
   await userEvent
     .setup()
@@ -244,7 +355,13 @@ it("requires owner confirmation before deletion and supports cancellation", asyn
     .mockResolvedValue({ ok: true, json: async () => ({ removed: true }) });
   vi.stubGlobal("fetch", fetcher);
   render(
-    <ProjectTasks projectId="p1" members={members} tasks={[task]} canDelete />,
+    <ProjectTasks
+      today="2026-11-22"
+      projectId="p1"
+      members={members}
+      tasks={[task]}
+      canDelete
+    />,
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Delete Draft report" }));
@@ -264,7 +381,13 @@ it("requires owner confirmation before deletion and supports cancellation", asyn
 it("opens the selected task editor and shows saved feedback", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(savedResponse()));
   render(
-    <ProjectTasks projectId="p1" members={members} tasks={[task]} canDelete />,
+    <ProjectTasks
+      today="2026-11-22"
+      projectId="p1"
+      members={members}
+      tasks={[task]}
+      canDelete
+    />,
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Edit Draft report" }));

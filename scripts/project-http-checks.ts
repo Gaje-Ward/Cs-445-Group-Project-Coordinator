@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../src/generated/prisma/client";
 import { taskHttpChecks } from "./task-http-checks";
+import { progressHttpChecks } from "./progress-http-checks";
 type Requester = (route: string, init?: RequestInit) => Promise<Response>;
 
 export async function anonymousProjectChecks(request: Requester) {
@@ -442,6 +443,15 @@ export async function projectHttpChecks({
       (await (await request(membersRoute)).json()).members.length,
       2,
     );
+    await progressHttpChecks({
+      request,
+      login,
+      projectId: project.id,
+      ownerEmail: owner.email,
+      memberEmail: member.email,
+      outsiderEmail: outsider.email,
+      base,
+    });
     await taskHttpChecks({
       request,
       login,
