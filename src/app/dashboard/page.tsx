@@ -2,10 +2,14 @@ import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { projects } from "@/lib/projects";
 import { LogoutButton } from "@/components/logout-button";
+import { ProjectProgress } from "@/components/project-progress";
+import { getProjectCalendar } from "@/lib/project-calendar";
+import { isPastDate } from "@/lib/project-progress";
 export const dynamic = "force-dynamic";
 export default async function Dashboard() {
   const user = await requireUser();
-  const items = await projects.list(user.id);
+  const calendar = getProjectCalendar();
+  const items = await projects.list(user.id, calendar.today);
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -56,9 +60,24 @@ export default async function Dashboard() {
                   ? `Deadline: ${project.deadline.toISOString().slice(0, 10)}`
                   : "No deadline set."}
               </p>
+              {isPastDate(project.deadline, calendar.today) && (
+                <p className="mt-1 text-sm font-semibold text-amber-800">
+                  Deadline passed
+                </p>
+              )}
+              <ProjectProgress
+                progress={project.progress}
+                label={"Task completion for " + project.name}
+                compact
+              />
             </li>
           ))}
         </ul>
+      )}
+      {items.length > 0 && (
+        <p className="mt-5 text-sm text-slate-600">
+          Due dates follow {calendar.label}.
+        </p>
       )}
     </section>
   );

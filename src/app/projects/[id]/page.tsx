@@ -7,6 +7,8 @@ import { requireUser } from "@/lib/session";
 import { projects } from "@/lib/projects";
 import { ProjectNotFoundError } from "@/lib/project-service";
 import { notFound } from "next/navigation";
+import { getProjectCalendar } from "@/lib/project-calendar";
+import { isPastDate } from "@/lib/project-progress";
 export const dynamic = "force-dynamic";
 export default async function ProjectPage({
   params,
@@ -15,6 +17,7 @@ export default async function ProjectPage({
 }) {
   const user = await requireUser();
   const { id } = await params;
+  const calendar = getProjectCalendar();
   let project;
   let team;
   let projectTasks;
@@ -47,6 +50,11 @@ export default async function ProjectPage({
               : "No deadline set."}
           </dd>
         </dl>
+        {isPastDate(project.deadline, calendar.today) && (
+          <p className="mt-2 text-sm font-semibold text-amber-800">
+            Deadline passed
+          </p>
+        )}
         {project.role === "OWNER" && (
           <Link
             href={`/projects/${project.id}/edit`}
@@ -64,6 +72,8 @@ export default async function ProjectPage({
           dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
         }))}
         canDelete={project.role === "OWNER"}
+        today={calendar.today}
+        calendarLabel={calendar.label}
       />
       <ProjectMembers
         projectId={id}

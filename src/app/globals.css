@@ -21,7 +21,7 @@ button:disabled {
   cursor: wait;
   opacity: 0.6;
 }
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   width: 100%;

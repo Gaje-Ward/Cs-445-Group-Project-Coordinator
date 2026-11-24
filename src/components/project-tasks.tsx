@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isTaskOverdue, summarizeTasks } from "@/lib/project-progress";
+import { ProjectProgress } from "./project-progress";
 import {
   TaskForm,
   taskStatusLabels,
@@ -13,11 +15,15 @@ export function ProjectTasks({
   tasks,
   members,
   canDelete,
+  today,
+  calendarLabel,
 }: {
   projectId: string;
   tasks: TaskView[];
   members: TaskMember[];
   canDelete: boolean;
+  today: string;
+  calendarLabel?: string;
 }) {
   const router = useRouter();
   const [editor, setEditor] = useState<TaskView | "new" | null>(null);
@@ -25,8 +31,14 @@ export function ProjectTasks({
   const [pending, setPending] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const progress = summarizeTasks(tasks, today);
+  const visibleTasks = overdueOnly
+    ? tasks.filter((task) => isTaskOverdue(task, today))
+    : tasks;
 
   function edit(task: TaskView | "new") {
+    if (task === "new") setOverdueOnly(false);
     setEditor(task);
     setConfirmId("");
     setError("");
@@ -86,6 +98,23 @@ export function ProjectTasks({
           Add task
         </button>
       </div>
+      <ProjectProgress progress={progress} label="Project task completion" />
+      {calendarLabel && (
+        <p className="mt-2 text-sm text-slate-600">
+          Due dates follow {calendarLabel}.
+        </p>
+      )}
+      {tasks.length > 0 && (
+        <label className="mt-4 flex w-fit items-center gap-2 whitespace-nowrap text-sm font-semibold">
+          <input
+            type="checkbox"
+            checked={overdueOnly}
+            onChange={(event) => setOverdueOnly(event.target.checked)}
+            className="h-4 w-4 shrink-0 p-0 accent-indigo-700"
+          />
+          Overdue only
+        </label>
+      )}
       {editor !== null && (
         <TaskForm
           key={editor === "new" ? "new" : editor.id}
@@ -104,17 +133,29 @@ export function ProjectTasks({
         <p className="mt-6 text-slate-600">
           No tasks yet. Add one to start planning the work.
         </p>
+      ) : visibleTasks.length === 0 ? (
+        <p className="mt-6 text-slate-600">No overdue tasks.</p>
       ) : (
         <ul className="mt-6 space-y-4">
-          {tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <li
               key={task.id}
-              className="rounded-lg border border-slate-200 p-4 sm:p-5"
+              className={
+                "rounded-lg border p-4 sm:p-5 " +
+                (isTaskOverdue(task, today)
+                  ? "border-amber-300 bg-amber-50/30"
+                  : "border-slate-200")
+              }
               aria-busy={pending === task.id}
             >
               <h3 className="break-words text-lg font-semibold">
                 {task.title}
               </h3>
+              {isTaskOverdue(task, today) && (
+                <p className="mt-2 text-sm font-semibold text-amber-800">
+                  Overdue
+                </p>
+              )}
               {task.description && (
                 <p className="mt-2 whitespace-pre-wrap break-words text-slate-600">
                   {task.description}
