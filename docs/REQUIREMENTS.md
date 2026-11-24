@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, and MVP-03 tasks. Progress summaries, advanced features, and integrations remain planned.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, and MVP-04 progress summaries. Files, comments, and the other backlog features remain planned.
 
 ## Current functional requirements
 
@@ -68,6 +68,14 @@ This increment reuses the existing schema and needs no database migration. Email
 - Forms have labels, pending states, and field feedback. Connection failures preserve entered work. The task list offers a direct status control; deletion controls appear only for the owner.
 
 Automated checks passed. Browser layout and keyboard review remain pending. Task dependencies, attachments, and comments are not part of this increment.
+
+## Progress requirements — MVP-04
+
+Dashboard cards and project pages show completed tasks out of all tasks, the rounded completion percentage, remaining work, and overdue counts. Empty projects stay at zero and show a helpful message. The project page also shows the in-progress count.
+
+An unfinished task is overdue only when its due date is before the server's current calendar day. Completed, undated, and due-today tasks are excluded. The Overdue only filter changes the visible list without changing the project summary. A past project deadline shows “Deadline passed” independently of task completion.
+
+Summaries use membership-scoped saved data and refresh after task changes. All members use one server calendar, defaulting to America/Chicago and configurable through APP_TIME_ZONE. Stored DATE values are not shifted between time zones. Other tabs and pages left open overnight need a refresh. See [SPRINT_4.md](SPRINT_4.md) for automated checks and the local browser review.
 
 ## MVP status
 

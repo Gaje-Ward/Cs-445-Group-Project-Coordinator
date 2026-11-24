@@ -54,3 +54,9 @@ Task validation tests check text limits, calendar dates, optional fields, status
 PostgreSQL task tests exercise collaborative editing, isolated project access, owner-only deletion, assignment constraints, and project cleanup. They also test simultaneous assignment and membership removal: the database either rejects the assignment or clears it when the member is removed. Cross-project assignments and incomplete assignment keys are rejected by database constraints, not just the API.
 
 The HTTP suite includes a task workflow through a running production server. It creates work as a member, changes status, checks owner deletion permissions, rejects unrelated task IDs, and confirms that removed teammates cannot make later requests. These checks do not provide visual browser coverage.
+
+## Progress coverage
+
+Unit/UI tests cover completion percentages, empty projects, due-today boundaries, completed work, and overdue filtering without changing totals. Calendar tests check Central Time day boundaries, daylight-saving changes, and a configured time zone.
+
+PostgreSQL tests calculate summaries from saved tasks and verify changes after editing or deleting work. Membership tests keep other projects private and revoke summary access after removal. HTTP checks exercise the same behavior through the production server, including dashboard progress, past project deadlines, and rejection of a client-supplied calendar override. The local browser review is recorded separately in the Sprint 4 notes.

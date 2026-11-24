@@ -22,6 +22,10 @@ Sprint 3 adds teammate management and tasks. Open a project to use its Tasks and
 
 Use Add task to enter a title and optional description, then choose an assignee and due date if needed. Any current member can edit tasks or move them between To do, In progress, and Done. Only the owner can delete tasks, with confirmation. Removing a teammate leaves their tasks in the project as unassigned work.
 
+Sprint 4 adds progress summaries to dashboard cards and project pages. Unfinished tasks with a past due date are marked overdue; use Overdue only to focus the task list. Work due today is not overdue. A past project deadline shows “Deadline passed.” See [the Sprint 4 notes](docs/SPRINT_4.md) for the rules and verification results.
+
+Due-date indicators use Central Time for everyone. Set APP_TIME_ZONE to another valid IANA time zone if needed, then restart the app. Refresh an open page to pick up another member's changes or a new calendar day.
+
 See [the implementation report](docs/IMPLEMENTATION.md) for the results and remaining work, and the [dependency audit](docs/DEPENDENCY_AUDIT.md) for the unresolved package findings.
 
 ## Technology stack

@@ -88,6 +88,12 @@ The add_projects_and_memberships migration only adds the enum, tables, indexes, 
 
 The project service creates a project with a nested OWNER membership inside a transaction. Lists and individual reads filter by session user membership; only the caller's role is selected, without other members' identities. Edits use an OWNER membership predicate in updateMany inside a transaction, then return the saved public project fields. A zero-row edit and an inaccessible read use the same ProjectNotFoundError. No client user ID determines authorization. Stored User records are never sent directly to the client because they contain passwordHash.
 
+## Progress summaries
+
+Project lists select task status and due date only for projects the session user belongs to. The service calculates counts and removes the selected task records from its response. GET /api/projects returns these summaries with the server calendar; GET /api/projects/[id]/tasks returns its authorized task list with the same summary fields and calendar.
+
+A shared pure helper calculates completion and overdue counts for the server and task component. The server supplies today's calendar date, using APP_TIME_ZONE or America/Chicago by default. Database DATE values remain unchanged. The task filter uses the full task list for totals and a separate filtered list for display. Saving work refreshes the page data; there is no live cross-tab update. This feature needs no database migration.
+
 ## Local development and tests
 
 Node runs on Windows, while PostgreSQL runs in Docker Compose. The development database binds to 127.0.0.1:5433. Its named volume, cs445-coordinator_postgres_data, keeps accounts across container restarts. A health check confirms that PostgreSQL is ready.
