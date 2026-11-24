@@ -1,6 +1,8 @@
 import "server-only";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { projectSchema } from "./project-validation";
+import { summarizeTasks } from "./project-progress";
+import { getProjectCalendar } from "./project-calendar";
 
 const fields = {
   id: true,
@@ -26,12 +28,19 @@ export function createProjectService(db: PrismaClient) {
         }),
       );
     },
-    async list(userId: string) {
-      return db.project.findMany({
+    async list(userId: string, today = getProjectCalendar().today) {
+      const items = await db.project.findMany({
         where: { memberships: { some: { userId } } },
-        select: fields,
+        select: {
+          ...fields,
+          tasks: { select: { status: true, dueDate: true } },
+        },
         orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
       });
+      return items.map(({ tasks, ...project }) => ({
+        ...project,
+        progress: summarizeTasks(tasks, today),
+      }));
     },
     async get(userId: string, id: string) {
       const project = await db.project.findFirst({
