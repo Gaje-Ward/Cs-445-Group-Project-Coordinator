@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, and MVP-04 progress summaries. Files, comments, and the other backlog features remain planned.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, MVP-04 progress summaries, and MVP-05 project files. Comments and the other backlog features remain planned.
 
 ## Current functional requirements
 
@@ -76,6 +76,24 @@ Dashboard cards and project pages show completed tasks out of all tasks, the rou
 An unfinished task is overdue only when its due date is before the server's current calendar day. Completed, undated, and due-today tasks are excluded. The Overdue only filter changes the visible list without changing the project summary. A past project deadline shows “Deadline passed” independently of task completion.
 
 Summaries use membership-scoped saved data and refresh after task changes. All members use one server calendar, defaulting to America/Chicago and configurable through APP_TIME_ZONE. Stored DATE values are not shifted between time zones. Other tabs and pages left open overnight need a refresh. See [SPRINT_4.md](SPRINT_4.md) for automated checks and the local browser review.
+
+## File requirements — MVP-05
+
+Current members can upload and download project files. Each file must be non-empty and at most 512 MiB; a project may hold at most 2 GiB and 100 files. Pending uploads also count toward quotas. The server serializes quota reservations before streaming uploads to private disk storage. The interface displays these binary limits as MB and GB. Downloads stream without buffering the entire file.
+
+Allowed extensions are PDF, TXT, PNG, JPEG, ZIP, and DOCX, with basic content-signature checks and incremental UTF-8 text validation. Filenames cannot contain paths or control characters. Disk files use generated keys and are served only as downloads after a membership check. Client-supplied MIME types and uploader identities do not grant access. Uploads must match their declared size, and current membership is checked again before completion.
+
+Uploaders can delete their own files while they remain members; owners can delete any file. Deletion requires confirmation. Removed members lose file access on later requests, but their uploads stay with the project. Lists omit file bytes and private storage keys. Failed or cancelled uploads retain the selected file for retry and release their reservations after cleanup. A maintenance command recovers stale partial files and orphaned storage. Existing database uploads remain readable. There is no malware scanning, inline preview, or archive extraction. See [SPRINT_5.md](SPRINT_5.md) for verification and limitations.
+
+## Site administration — ADM-01
+
+A site administrator can view all registered accounts and projects, list uploaded files, and download available files without joining each project. Lists support search and pagination. This read access does not grant ordinary project write permissions or expose password hashes and storage keys.
+
+Administrator status defaults to false and cannot be selected during public registration. Trusted local provisioning and existing active administrators can assign it. Each admin request checks the current database status so revocation affects subsequent requests from existing sessions. See [ADMIN.md](ADMIN.md).
+
+Administrators can disable/reactivate accounts, edit display names, and reset passwords. Disabling and resets invalidate existing sessions, and reactivation requires a fresh login. Permanent deletion requires the account email and confirmation; owned projects must transfer to the acting administrator first. Shared work remains available, with task assignments cleared and file uploader references removed. The web controls prevent self-lockout and protect the final active administrator.
+
+Administrators can search and filter a lightweight history of deleted project/file names. File history retains the project name even after that project is deleted. History contains no file contents or private storage keys and cannot restore deleted work. Failed uploads are excluded, cascading deletions do not duplicate records, and rolled-back deletions leave no history. Tracking begins when the migration is applied.
 
 ## MVP status
 

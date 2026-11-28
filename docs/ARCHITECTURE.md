@@ -58,13 +58,13 @@ The User table has a unique email constraint. The service checks for an existing
 
 For login, the credentials provider loads the account and compares the password with its stored hash. A missing account still performs a dummy-hash check to reduce timing differences. Invalid credentials get a generic message, and database errors are not returned to the client.
 
-A successful login places the verified id, name, and email in an encrypted JWT session that lasts up to eight hours. Auth.js manages the cookies and CSRF protection for login/logout. Local HTTP development uses the local cookie settings; an HTTPS NEXTAUTH_URL enables secure cookies. NEXTAUTH_SECRET must remain private.
+A successful login places the verified identity and its session version in an encrypted JWT that lasts up to eight hours. The session callback checks the current database account status/version and returns safe identity fields. Invalidated or deleted accounts cannot authorize protected requests. Auth.js manages login/logout cookies and CSRF protection. Local HTTP development uses local cookie settings; an HTTPS NEXTAUTH_URL enables secure cookies. NEXTAUTH_SECRET must remain private.
 
 The dashboard calls requireUser on the server. If the session has no valid user identity, the request redirects to /login before dashboard content is rendered. Next.js may send that redirect in a streamed response body rather than as HTTP 307, so the HTTP tests check both forms.
 
-Logout removes the browser's session cookie. It does not centrally revoke a stolen JWT, which can remain valid until expiry. Password reset, email verification, account disabling, and central revocation have not been implemented.
+Logout removes the browser's session cookie. Administrative disabling and password resets increment a database session version, invalidating existing tokens on subsequent protected requests. Reactivation requires a fresh login. Email verification and self-service email-based password recovery remain unimplemented.
 
-Credentials login does not create users automatically; registration stores them explicitly. JWT sessions do not need an Auth.js database adapter or Account, Session, and VerificationToken tables. The JWT callback ignores client session-update data, and the session callback returns only the user's id, name, and email. There is no endpoint for changing roles or other protected account fields.
+Credentials login does not create users automatically; registration stores them explicitly. JWT sessions do not need an Auth.js database adapter or Account, Session, and VerificationToken tables. The JWT callback ignores client session-update data, and the session callback returns only the current user's safe identity. Privileged account changes use separate administrator endpoints.
 
 ## Database
 
@@ -93,6 +93,34 @@ The project service creates a project with a nested OWNER membership inside a tr
 Project lists select task status and due date only for projects the session user belongs to. The service calculates counts and removes the selected task records from its response. GET /api/projects returns these summaries with the server calendar; GET /api/projects/[id]/tasks returns its authorized task list with the same summary fields and calendar.
 
 A shared pure helper calculates completion and overdue counts for the server and task component. The server supplies today's calendar date, using APP_TIME_ZONE or America/Chicago by default. Database DATE values remain unchanged. The task filter uses the full task list for totals and a separate filtered list for display. Saving work refreshes the page data; there is no live cross-tab update. This feature needs no database migration.
+
+## Project files
+
+ProjectFile stores metadata, a generated disk storage key, and a PENDING/READY/DELETING state. New file bytes stream to FILE_STORAGE_PATH, outside public/ and build output. Existing small BYTEA uploads remain supported without a reset. List queries return READY metadata only, without storage keys. Downloads authorize membership before opening a file stream. Deletion combines membership and uploader/owner checks, marks the record DELETING, then removes its disk file and metadata. Project deletion cascades records; maintenance recovers orphaned disk files. Deleting an uploader account sets its reference to null.
+
+GET /api/projects/[id]/files lists metadata. POST accepts an application/octet-stream body with encoded X-File-Name and declared X-File-Size headers. A transaction locks the project row and reserves quota before reading the stream. Pending and deleting records count toward the 2 GiB/100-file quota; each file may be at most 512 MiB. Streaming validation enforces actual byte counts and signatures. Backpressure limits buffering, with two active uploads per process and a 30-minute transfer deadline. Membership is checked again before marking the stored file READY. Failed transfers remove their disk data before releasing quota.
+
+GET /api/projects/[id]/files/[fileId] returns a streamed, uncached attachment with an encoded filename and nosniff header. DELETE accepts an empty JSON object through the existing origin/body checks. No endpoint interprets a filename as a path. Archives are not extracted or scanned for malware. The cleanup command previews or removes reservations and orphaned files older than 24 hours while protecting READY files. Backups must cover both PostgreSQL and disk storage consistently. Production still needs persistent storage, proxy body limits/timeouts, and a maintenance schedule.
+
+## Site administration
+
+User.isAdmin defaults to false and is independent of project roles. A trusted local provisioning command grants or revokes it; public registration cannot set it. Admin permissions are read from the database for each request, rather than stored as authorization claims in the JWT. The admin API wrapper and services both verify the session user's current flag. The dashboard conditionally links to /admin after the same lookup.
+
+The /admin server page and GET /api/admin expose paginated, searchable users/projects/files. Explicit selects exclude password hashes and storage keys. GET /api/admin/files/[fileId] authorizes global administrator read access before using the existing attachment streaming behavior. Regular project routes retain membership checks, even for administrators. Account-management routes are authorized separately, including the confirmed ownership transfer used during account deletion. See [ADMIN.md](ADMIN.md).
+
+## Account management
+
+User.isActive defaults to true and sessionVersion defaults to zero. Login rejects disabled accounts; every protected request resolves a current active identity with a matching token version. Capturing the version during password verification prevents an earlier password check from producing a valid session after a reset. Existing version-zero tokens remain compatible until revoked.
+
+PATCH /api/admin/users/[userId] changes supported display/access fields. POST to its /password route hashes the new password and increments sessionVersion. DELETE requires the target email, and an explicit ownership-transfer confirmation when needed. Management transactions take an advisory lock and recheck the acting administrator. Self-lockout and removal of the final active administrator are blocked by the web controls.
+
+Account deletion locks the target user before checking ownership. Owned projects are transferred to the acting administrator before memberships and the user record are removed in the same transaction. Shared files retain their content with a null uploader; membership deletion clears task assignments. Upload reservations use the same user-before-project lock order, and finalization checks active membership. Ordinary project permissions remain enforced outside these management actions.
+
+## Deletion history
+
+DeletionRecord keeps bounded names, original record/project identifiers, optional project names, and deletion timestamps. It has no file bytes, storage keys, or foreign keys back to records that can disappear. Unique kind/source identifiers deduplicate cascade events. PostgreSQL DELETE triggers record shared file names and snapshot project/file names before a project cascade removes the source rows. Pending uploads are excluded. History writes participate in the deletion transaction, so failed/rolled-back deletions do not leave false entries.
+
+The admin history view uses the existing current-permission guard, search, type filtering, and 25-row pagination. It offers no download or restore operation. Disk cleanup remains independent of lightweight history retention. Triggers do not backfill earlier deletions or log administrative TRUNCATE operations.
 
 ## Local development and tests
 

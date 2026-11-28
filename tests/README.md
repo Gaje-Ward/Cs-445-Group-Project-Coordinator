@@ -1,5 +1,23 @@
 # Tests
 
+## Administrator coverage
+
+Account-management tests cover confirmation forms, password hashing, disabled logins, current session-version checks, and old cookies after reactivation. Database tests verify access-change serialization and permanent deletion with shared work preserved. Concurrent project creation cannot leave an unreviewed ownerless project. Deleting an owner during an upload prevents the unfinished file from becoming available. HTTP checks use an independent cookie jar to verify real login, disable/reactivate, reset, and delete behavior.
+
+Unit tests deny anonymous and ordinary accounts before admin actions run, verify the session identity, and keep errors generic. PostgreSQL tests check global lists, search, pagination, selected fields, cross-project downloads, and immediate permission grants/revocations. They confirm regular project permissions still apply to administrators and that public registration rejects isAdmin.
+
+HTTP checks render each admin view using a live session, compare downloaded disk/legacy files, and verify no password hashes or private storage keys appear. Attempted session/registration privilege changes are rejected or ignored, and revoking the database flag blocks that same session. Test fixtures are isolated from development users. Visual/keyboard review remains separate.
+
+Deletion-history tests exercise actual PostgreSQL triggers. They verify file content removal, project/file cascade snapshots without duplicates, transaction rollback, exclusion of pending uploads, and admin-only filtered/paginated reads. HTTP checks delete a fixture file through its normal endpoint, delete its project, and render the name-only history. Fixture cleanup removes history only for each suite's own project IDs.
+
+## File sharing coverage
+
+File validation checks supported extensions and basic signatures, incremental UTF-8 text, unsafe filenames, empty files, and the exact size limit. Request tests require declared sizes and check streamed attachment headers. Disk tests compare hashes after streamed writes/reads and close cancelled downloads. Component tests exercise file selection, retry after failure, upload cancellation, and confirmation before deletion.
+
+PostgreSQL tests use a temporary private upload directory. They verify metadata-only lists, permissions, legacy BYTEA downloads, interrupted transfers, quota release, and membership removal before an upload finishes. Concurrent reservations test both quotas, including a full 2 GiB reservation total without allocating that much file data. Cleanup tests preview and remove stale artifacts while preserving READY files. Temporary directories are removed after each suite.
+
+The production-server HTTP suite covers authenticated uploads/downloads, rejected files, download headers, strict deletion input, cross-origin rejection, and access after removal. It generates a valid 32 MiB ZIP in chunks and compares SHA-256 hashes after downloading it. Set LARGE_ARCHIVE_TEST_MB to a whole number from 1 to 500 to exercise a larger archive; the local verification also passed at 480 MiB. The server uses a separate temporary file directory that is removed after shutdown. Anonymous file routes require login. Real-browser downloads and visual/keyboard review remain separate checks.
+
 The tests cover three levels: individual behaviors, database operations, and requests to a running application. They use a separate test database so development accounts are left alone.
 
 ## Unit and UI tests

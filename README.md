@@ -26,6 +26,14 @@ Sprint 4 adds progress summaries to dashboard cards and project pages. Unfinishe
 
 Due-date indicators use Central Time for everyone. Set APP_TIME_ZONE to another valid IANA time zone if needed, then restart the app. Refresh an open page to pick up another member's changes or a new calendar day.
 
+Sprint 5 adds a Files section to each project. Members can upload PDF, TXT, PNG, JPEG, ZIP, or DOCX files and download shared work. Files are limited to 512 MB each, with 2 GB and 100 files per project. The uploader or project owner can delete a file after confirmation. Uploads and downloads stream through private disk storage. Apply migrations with npm.cmd run db:deploy before opening project pages. See [the Sprint 5 notes](docs/SPRINT_5.md) for storage choices, limits, and verification.
+
+Site administrators can review all registered users, projects, and uploaded files at /admin. Grant an existing account access with npm.cmd run admin:account -- admin@example.com from a trusted local terminal. This keeps its current password. Administrator permissions are checked in the database on every admin request. See [the admin guide](docs/ADMIN.md) for provisioning, access rules, and verification.
+
+The admin dashboard also keeps deletion history for projects and files. It retains names and project context without retaining file contents. Tracking begins with the deletion-history migration; earlier deletions cannot be recovered.
+
+Use Manage user in the Users tab to disable/reactivate accounts, reset passwords, or permanently delete an account. Disabling and password resets invalidate old sessions. Permanent deletion keeps shared work and requires confirming ownership transfer for any projects the account owns. Your administrator account is protected from self-lockout. See the admin guide before using permanent deletion.
+
 See [the implementation report](docs/IMPLEMENTATION.md) for the results and remaining work, and the [dependency audit](docs/DEPENDENCY_AUDIT.md) for the unresolved package findings.
 
 ## Technology stack
@@ -83,6 +91,8 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 Keep the generated secret private. Use the same PostgreSQL password in POSTGRES_PASSWORD, DATABASE_URL, and TEST_DATABASE_URL. If it contains special URL characters, encode them in the connection URLs; the setup script avoids this by generating a hex password.
 
 NEXTAUTH_URL should match the address used in the browser, normally http://localhost:3000. NEXTAUTH_SECRET protects the sessions. Secrets must not use the NEXT_PUBLIC_ prefix, which exposes values to client code.
+
+FILE_STORAGE_PATH selects the private upload directory, defaulting to .data/project-files. Local .data files are ignored by Git. Keep uploads outside public/ and .next/. Back up the upload directory with PostgreSQL; both are needed to restore shared files. Existing small database uploads remain supported. Run npm.cmd run files:cleanup to preview stale transfers and orphaned files; add -- --apply to remove those older than 24 hours. This maintenance command is not scheduled automatically.
 
 Once PostgreSQL has initialized its volume, changing POSTGRES_PASSWORD in .env does not update the database password. Keep the configuration matched to the existing database, or change the database password deliberately. Deleting the volume would erase its data.
 
@@ -150,7 +160,7 @@ src/app/                  Pages and Route Handlers
 src/components/           Interactive authentication and project forms
 src/lib/                  Validation, persistence, passwords, auth, sessions
 src/types/                Session type extension
-prisma/schema.prisma      User, Project, and ProjectMember schema
+prisma/schema.prisma      Account, project, membership, task, and file schema
 prisma/migrations/        Versioned SQL migrations
 scripts/                  Safe env/test setup and HTTP verification
 tests/unit/               Isolated logic and UI tests
