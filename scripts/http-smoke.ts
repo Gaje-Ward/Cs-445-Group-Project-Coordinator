@@ -1,10 +1,14 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { testDatabaseUrl } from "./test-database";
+
 import {
   anonymousProjectChecks,
   projectHttpChecks,
@@ -12,6 +16,7 @@ import {
 async function main() {
   const databaseUrl = testDatabaseUrl();
   const base = "http://localhost:3001";
+  const storageRoot = await mkdtemp(join(tmpdir(), "gpc-http-files-"));
   const db = new PrismaClient({
     adapter: new PrismaPg({ connectionString: databaseUrl }),
   });
@@ -37,6 +42,7 @@ async function main() {
         ...process.env,
         DATABASE_URL: databaseUrl,
         NEXTAUTH_URL: base,
+        FILE_STORAGE_PATH: storageRoot,
         NEXTAUTH_SECRET: randomBytes(32).toString("base64"),
       },
     },
@@ -211,6 +217,7 @@ async function main() {
       base,
       owner: { id: identity.id, email, password: input.password },
     });
+
     const csrfToken = await csrf();
     const signedOut = await request("/api/auth/signout", {
       method: "POST",
@@ -238,6 +245,7 @@ async function main() {
         server.kill();
         await exited;
       }
+      await rm(storageRoot, { recursive: true, force: true });
     }
   }
 }

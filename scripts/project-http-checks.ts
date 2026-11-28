@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../src/generated/prisma/client";
 import { taskHttpChecks } from "./task-http-checks";
 import { progressHttpChecks } from "./progress-http-checks";
+import { fileHttpChecks } from "./file-http-checks";
 type Requester = (route: string, init?: RequestInit) => Promise<Response>;
 
 export async function anonymousProjectChecks(request: Requester) {
@@ -11,6 +12,8 @@ export async function anonymousProjectChecks(request: Requester) {
     "/api/projects/missing",
     "/api/projects/missing/members",
     "/api/projects/missing/tasks",
+    "/api/projects/missing/files",
+    "/api/projects/missing/files/missing",
   ])
     assert.equal((await request(route)).status, 401);
   for (const [route, method] of [
@@ -21,6 +24,8 @@ export async function anonymousProjectChecks(request: Requester) {
     ["/api/projects/missing/tasks", "POST"],
     ["/api/projects/missing/tasks/missing", "PATCH"],
     ["/api/projects/missing/tasks/missing", "DELETE"],
+    ["/api/projects/missing/files", "POST"],
+    ["/api/projects/missing/files/missing", "DELETE"],
   ]) {
     assert.equal((await request(route, { method })).status, 401);
   }
@@ -452,6 +457,16 @@ export async function projectHttpChecks({
       outsiderEmail: outsider.email,
       base,
     });
+    await fileHttpChecks({
+      request,
+      login,
+      projectId: project.id,
+      otherProjectId: hidden.id,
+      ownerEmail: owner.email,
+      member,
+      outsiderEmail: outsider.email,
+      base,
+    });
     await taskHttpChecks({
       request,
       login,
@@ -467,6 +482,7 @@ export async function projectHttpChecks({
     );
   } finally {
     await db.project.deleteMany({ where: { id: { in: projectIds } } });
+
     await db.user.deleteMany({ where: { id: { in: userIds } } });
   }
 }
