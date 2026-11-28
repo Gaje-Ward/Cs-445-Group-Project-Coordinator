@@ -28,6 +28,9 @@ export async function anonymousProjectChecks(request: Requester) {
     ["/api/projects/missing/tasks/missing", "DELETE"],
     ["/api/projects/missing/files", "POST"],
     ["/api/projects/missing/files/missing", "DELETE"],
+    ["/api/admin/users/missing", "PATCH"],
+    ["/api/admin/users/missing", "DELETE"],
+    ["/api/admin/users/missing/password", "POST"],
   ]) {
     assert.equal((await request(route, { method })).status, 401);
   }

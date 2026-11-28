@@ -59,17 +59,32 @@ describe("registration (mocked persistence)", () => {
   });
 });
 describe("authentication (mocked persistence)", () => {
+  it("rejects a disabled account even with its correct password", async () => {
+    store.findByEmail.mockResolvedValue({
+      ...publicUser,
+      isActive: false,
+      passwordHash: await hashPassword(input.password),
+    });
+    expect(await service.authenticate(input)).toBeNull();
+  });
   it("returns safe identity for valid credentials", async () => {
     store.findByEmail.mockResolvedValue({
       ...publicUser,
       passwordHash: await hashPassword(input.password),
+      isActive: true,
+      sessionVersion: 0,
     });
-    expect(await service.authenticate(input)).toEqual(publicUser);
+    expect(await service.authenticate(input)).toEqual({
+      ...publicUser,
+      sessionVersion: 0,
+    });
   });
   it("returns null for wrong passwords and missing users", async () => {
     store.findByEmail.mockResolvedValue({
       ...publicUser,
       passwordHash: await hashPassword(input.password),
+      isActive: true,
+      sessionVersion: 0,
     });
     expect(
       await service.authenticate({

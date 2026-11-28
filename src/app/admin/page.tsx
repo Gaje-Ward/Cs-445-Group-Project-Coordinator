@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/session";
 import { admin } from "@/lib/admin";
 import { AdminAccessError } from "@/lib/admin-service";
 import { LogoutButton } from "@/components/logout-button";
-
+import { AdminUserControls } from "@/components/admin-user-controls";
 export const dynamic = "force-dynamic";
 function size(bytes: number) {
   return bytes >= 1024 * 1024
@@ -241,10 +241,11 @@ export default async function AdminPage({
                       "Name",
                       "Email",
                       "Access",
-
+                      "Status",
                       "Projects",
                       "Uploads",
                       "Registered",
+                      "Manage",
                     ].map((h) => (
                       <th scope="col" className={heading} key={h}>
                         {h}
@@ -260,11 +261,27 @@ export default async function AdminPage({
                       <td className={cell}>
                         {item.isAdmin ? "Administrator" : "User"}
                       </td>
-
+                      <td className={cell}>
+                        {item.isActive ? "Active" : "Disabled"}
+                      </td>
                       <td className={cell}>{item._count.memberships}</td>
                       <td className={cell}>{item._count.uploads}</td>
                       <td className={cell + " whitespace-nowrap"}>
                         {item.createdAt.toISOString().slice(0, 10)}
+                      </td>
+                      <td className={cell}>
+                        <AdminUserControls
+                          key={item.id + ":" + item.name}
+                          user={{
+                            id: item.id,
+                            name: item.name,
+                            email: item.email,
+                            isAdmin: item.isAdmin,
+                            isActive: item.isActive,
+                            ownedProjectCount: item.ownedProjectCount,
+                          }}
+                          currentUserId={user.id}
+                        />
                       </td>
                     </tr>
                   ))}

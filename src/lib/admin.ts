@@ -2,6 +2,12 @@ import "server-only";
 import { getDb } from "./db";
 import { createAdminService } from "./admin-service";
 export const admin = {
+  deleteUser: (actorId: string, targetId: string, input: unknown) =>
+    createAdminService(getDb()).deleteUser(actorId, targetId, input),
+  resetPassword: (actorId: string, targetId: string, input: unknown) =>
+    createAdminService(getDb()).resetPassword(actorId, targetId, input),
+  changeUser: (actorId: string, targetId: string, input: unknown) =>
+    createAdminService(getDb()).changeUser(actorId, targetId, input),
   allowed: (userId: string) => createAdminService(getDb()).allowed(userId),
   overview: (userId: string, input: unknown) =>
     createAdminService(getDb()).overview(userId, input),

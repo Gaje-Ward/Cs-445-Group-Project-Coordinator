@@ -45,9 +45,14 @@ export function createFileService(
     let id: string | undefined;
     try {
       const reserved = await db.$transaction(async (tx) => {
+        // Match account deletion's user-before-project lock order.
+        const account = await tx.$queryRaw<
+          { id: string }[]
+        >`SELECT "id" FROM "User" WHERE "id"=${userId} AND "isActive"=true FOR KEY SHARE`;
+        if (!account.length) throw new ProjectNotFoundError();
         const rows = await tx.$queryRaw<
           { id: string }[]
-        >`SELECT p."id" FROM "Project" p JOIN "ProjectMember" m ON m."projectId"=p."id" WHERE p."id"=${projectId} AND m."userId"=${userId} FOR UPDATE OF p`;
+        >`SELECT p."id" FROM "Project" p JOIN "ProjectMember" m ON m."projectId"=p."id" JOIN "User" u ON u."id"=m."userId" WHERE p."id"=${projectId} AND m."userId"=${userId} AND u."isActive"=true FOR UPDATE OF p`;
         if (!rows.length) throw new ProjectNotFoundError();
         const usage = await tx.projectFile.aggregate({
           where: { projectId },
@@ -83,7 +88,7 @@ export function createFileService(
             id,
             state: "PENDING",
             project: {
-              memberships: { some: { userId } },
+              memberships: { some: { userId, user: { isActive: true } } },
             },
           },
           data: { state: "READY" },

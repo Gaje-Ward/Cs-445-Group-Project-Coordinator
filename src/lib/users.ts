@@ -5,7 +5,14 @@ export const users = createUserService({
   findByEmail: (email) =>
     getDb().user.findUnique({
       where: { email },
-      select: { id: true, name: true, email: true, passwordHash: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        passwordHash: true,
+        isActive: true,
+        sessionVersion: true,
+      },
     }),
   create: (data) =>
     getDb().user.create({

@@ -2,7 +2,12 @@ import "server-only";
 import { registrationSchema, loginSchema } from "./validation";
 import { getDummyHash, hashPassword, verifyPassword } from "./password";
 export type PublicUser = { id: string; name: string; email: string };
-export type StoredUser = PublicUser & { passwordHash: string };
+export type StoredUser = PublicUser & {
+  passwordHash: string;
+  isActive: boolean;
+  sessionVersion: number;
+};
+export type AuthenticatedUser = PublicUser & { sessionVersion: number };
 export type UserStore = {
   findByEmail: (email: string) => Promise<StoredUser | null>;
   create: (data: {
@@ -38,7 +43,7 @@ export function createUserService(store: UserStore) {
         throw error;
       }
     },
-    async authenticate(input: unknown): Promise<PublicUser | null> {
+    async authenticate(input: unknown): Promise<AuthenticatedUser | null> {
       const parsed = loginSchema.safeParse(input);
       if (!parsed.success) return null;
       const user = await store.findByEmail(parsed.data.email);
@@ -46,8 +51,13 @@ export function createUserService(store: UserStore) {
         parsed.data.password,
         user?.passwordHash ?? (await getDummyHash()),
       );
-      if (!user || !valid) return null;
-      return { id: user.id, name: user.name, email: user.email };
+      if (!user?.isActive || !valid) return null;
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        sessionVersion: user.sessionVersion,
+      };
     },
   };
 }

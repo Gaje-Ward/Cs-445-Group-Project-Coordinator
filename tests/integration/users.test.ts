@@ -31,7 +31,10 @@ it("persists registration and verifies login against real PostgreSQL", async () 
   const stored = await db.user.findUniqueOrThrow({ where: { id: user.id } });
   expect(stored.passwordHash).not.toBe(input.password);
   expect(await verifyPassword(input.password, stored.passwordHash)).toBe(true);
-  expect(await service.authenticate(input)).toEqual(user);
+  expect(await service.authenticate(input)).toEqual({
+    ...user,
+    sessionVersion: 0,
+  });
   expect(
     await service.authenticate({
       ...input,

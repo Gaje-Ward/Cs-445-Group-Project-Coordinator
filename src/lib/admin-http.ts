@@ -2,8 +2,8 @@ import "server-only";
 import { getServerSession } from "next-auth";
 import { ZodError } from "zod";
 import { authOptions } from "./auth";
-import { AdminAccessError } from "./admin-service";
-
+import { AdminAccessError, AdminUserChangeError } from "./admin-service";
+import { RequestError } from "./project-http";
 import { FileError } from "./file-validation";
 import { admin } from "./admin";
 const reply = (error: string, status: number) =>
@@ -22,7 +22,8 @@ export async function adminRequest(
     return await action(session.user.id);
   } catch (error) {
     if (error instanceof AdminAccessError) return reply(error.message, 403);
-
+    if (error instanceof AdminUserChangeError || error instanceof RequestError)
+      return reply(error.message, error.status);
     if (error instanceof FileError) return reply(error.message, error.status);
     if (error instanceof ZodError)
       return reply("Please check the submitted fields.", 400);
