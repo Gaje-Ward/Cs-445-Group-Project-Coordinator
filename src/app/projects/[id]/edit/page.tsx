@@ -21,7 +21,11 @@ export default async function EditProject({
   if (project.role !== "OWNER") notFound();
   return (
     <section className="mx-auto max-w-xl rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
-      <h1 className="mb-6 text-3xl font-bold">Edit project</h1>
+      <h1 className="text-3xl font-bold">Edit project</h1>
+      <p className="mb-6 mt-3 text-slate-600">
+        Change the project name below to rename it, then save your changes. Your
+        tasks, files, and discussion stay with the project.
+      </p>
       <ProjectForm
         project={{
           id: project.id,

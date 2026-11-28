@@ -1,5 +1,11 @@
 # Tests
 
+## Discussion coverage
+
+Validation and component tests check text limits, protected fields, literal HTML display, author controls, failed-request drafts, confirmation, and pagination. Refreshed props do not silently replace the version an author was editing or reviewing for deletion.
+
+PostgreSQL tests exercise actual membership checks, owner moderation, competing edits, revoked access, pagination, and account/project deletion. HTTP checks use independent cookie jars to post and edit through real sessions, reject unsafe requests, render escaped text, and confirm that removed or disabled users lose access. Local visual and keyboard review remain separate checks.
+
 ## Administrator coverage
 
 Account-management tests cover confirmation forms, password hashing, disabled logins, current session-version checks, and old cookies after reactivation. Database tests verify access-change serialization and permanent deletion with shared work preserved. Concurrent project creation cannot leave an unreviewed ownerless project. Deleting an owner during an upload prevents the unfinished file from becoming available. HTTP checks use an independent cookie jar to verify real login, disable/reactivate, reset, and delete behavior.

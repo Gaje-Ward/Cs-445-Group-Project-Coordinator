@@ -36,6 +36,8 @@ Use Manage user in the Users tab to disable/reactivate accounts, reset passwords
 
 See [the implementation report](docs/IMPLEMENTATION.md) for the results and remaining work, and the [dependency audit](docs/DEPENDENCY_AUDIT.md) for the unresolved package findings.
 
+Sprint 6 adds Discussion to project pages. Members can post comments and edit their own text; authors and project owners can delete comments after confirmation. Comments show author names and posting times, with older discussions available through pagination. Apply migrations with npm.cmd run db:deploy before trying it. See [the Sprint 6 notes](docs/SPRINT_6.md) for permissions and verification.
+
 ## Technology stack
 
 Versions recorded during the initial setup on October 8, 2026:
@@ -160,7 +162,7 @@ src/app/                  Pages and Route Handlers
 src/components/           Interactive authentication and project forms
 src/lib/                  Validation, persistence, passwords, auth, sessions
 src/types/                Session type extension
-prisma/schema.prisma      Account, project, membership, task, and file schema
+prisma/schema.prisma      Account, project, membership, task, file, and comment schema
 prisma/migrations/        Versioned SQL migrations
 scripts/                  Safe env/test setup and HTTP verification
 tests/unit/               Isolated logic and UI tests

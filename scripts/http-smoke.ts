@@ -9,6 +9,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { testDatabaseUrl } from "./test-database";
 import { adminHttpChecks } from "./admin-http-checks";
+import { commentHttpChecks } from "./comment-http-checks";
 import {
   anonymousProjectChecks,
   projectHttpChecks,
@@ -225,6 +226,7 @@ async function main() {
       ownerId: identity.id,
       storageRoot,
     });
+    await commentHttpChecks(db, base);
     const csrfToken = await csrf();
     const signedOut = await request("/api/auth/signout", {
       method: "POST",

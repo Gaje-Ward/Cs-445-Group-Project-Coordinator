@@ -6,6 +6,7 @@ import { ProjectNotFoundError } from "./project-service";
 import { MemberChangeError } from "./member-service";
 import { TaskNotFoundError, TaskAssignmentError } from "./task-service";
 import { FileError } from "./file-validation";
+import { CommentNotFoundError, CommentConflictError } from "./comment-service";
 
 export const projectReply = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -26,6 +27,10 @@ export async function projectRequest(
       return projectReply({ error: "Please log in." }, 401);
     return await action(session.user.id);
   } catch (error) {
+    if (error instanceof CommentNotFoundError)
+      return projectReply({ error: error.message }, 404);
+    if (error instanceof CommentConflictError)
+      return projectReply({ error: error.message }, 409);
     if (error instanceof FileError)
       return projectReply({ error: error.message }, error.status);
     if (error instanceof TaskNotFoundError)

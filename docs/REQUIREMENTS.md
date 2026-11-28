@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, MVP-04 progress summaries, and MVP-05 project files. Comments and the other backlog features remain planned.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, MVP-04 progress summaries, MVP-05 project files, and MVP-06 project discussion. Other backlog features remain planned.
 
 ## Current functional requirements
 
@@ -94,6 +94,14 @@ Administrator status defaults to false and cannot be selected during public regi
 Administrators can disable/reactivate accounts, edit display names, and reset passwords. Disabling and resets invalidate existing sessions, and reactivation requires a fresh login. Permanent deletion requires the account email and confirmation; owned projects must transfer to the acting administrator first. Shared work remains available, with task assignments cleared and file uploader references removed. The web controls prevent self-lockout and protect the final active administrator.
 
 Administrators can search and filter a lightweight history of deleted project/file names. File history retains the project name even after that project is deleted. History contains no file contents or private storage keys and cannot restore deleted work. Failed uploads are excluded, cascading deletions do not duplicate records, and rolled-back deletions leave no history. Tracking begins when the migration is applied.
+
+## Discussion requirements — MVP-06
+
+Current members can post plain-text comments of 1–4,000 characters on a project. Each comment shows the author's name and posting time in the configured application time zone. Lists show 25 comments per page, newest first.
+
+Only the author can edit a comment. The author or project owner can delete it after confirmation. Server checks enforce current active membership; administrator status alone does not grant discussion access. Version checks reject stale edits and deletions. Responses exclude account emails and private fields.
+
+Comments survive membership removal and account deletion, with deleted authors shown as “Former user.” Project deletion removes their content. Automated checks passed; local visual and keyboard review remain pending. See [Sprint 6](SPRINT_6.md).
 
 ## MVP status
 

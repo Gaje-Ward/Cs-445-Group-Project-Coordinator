@@ -30,3 +30,30 @@ textarea {
   padding: 0.75rem;
   background: white;
 }
+
+.project-workspace {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 112rem) {
+  .project-workspace {
+    width: calc(100vw - 3rem);
+    margin-left: calc(50% - 50vw + 1.5rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 61rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .project-workspace > :first-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .project-discussion-sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 32rem;
+    justify-self: end;
+  }
+}

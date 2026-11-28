@@ -102,6 +102,16 @@ GET /api/projects/[id]/files lists metadata. POST accepts an application/octet-s
 
 GET /api/projects/[id]/files/[fileId] returns a streamed, uncached attachment with an encoded filename and nosniff header. DELETE accepts an empty JSON object through the existing origin/body checks. No endpoint interprets a filename as a path. Archives are not extracted or scanned for malware. The cleanup command previews or removes reservations and orphaned files older than 24 hours while protecting READY files. Backups must cover both PostgreSQL and disk storage consistently. Production still needs persistent storage, proxy body limits/timeouts, and a maintenance schedule.
 
+## Project discussion
+
+Comment belongs to a project and optionally to its author. The project relationship cascades deletion; the author relationship becomes null when an account is deleted. Responses select comment text, version, timestamps, and the author's display name without exposing account emails or password hashes.
+
+The comments service checks active membership inside each transaction. It locks the user before the project, matching the order used by account deletion and uploads, then holds the membership row during the operation. Authors can edit their own comments; authors and project owners can delete. Administrator status does not bypass these checks.
+
+GET and POST /api/projects/[id]/comments list and create comments. PATCH and DELETE /api/projects/[id]/comments/[commentId] require the version originally reviewed. Conditional writes increment the version on edits and reject stale actions with HTTP 409. Mutations reuse the JSON origin and body-size checks. Lists return bounded pagination metadata and 25 comments ordered newest first.
+
+The project server page formats timestamps in the configured application time zone. ProjectDiscussion renders plain text and preserves drafts after failed requests. Refreshing retrieves other members' changes; the feature does not use live subscriptions. See [Sprint 6](SPRINT_6.md).
+
 ## Site administration
 
 User.isAdmin defaults to false and is independent of project roles. A trusted local provisioning command grants or revokes it; public registration cannot set it. Admin permissions are read from the database for each request, rather than stored as authorization claims in the JWT. The admin API wrapper and services both verify the session user's current flag. The dashboard conditionally links to /admin after the same lookup.

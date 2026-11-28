@@ -19,6 +19,7 @@ model User {
   updatedAt      DateTime        @updatedAt @db.Timestamptz(3)
   memberships    ProjectMember[]
   uploads        ProjectFile[]
+  comments       Comment[]
 }
 
 enum ProjectRole {
@@ -36,6 +37,7 @@ model Project {
   memberships ProjectMember[]
   tasks       Task[]
   files       ProjectFile[]
+  comments    Comment[]
 }
 
 model ProjectMember {
@@ -114,4 +116,19 @@ model DeletionRecord {
 
   @@unique([kind, sourceId])
   @@index([deletedAt, id])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  projectId String
+  authorId  String?
+  body      String   @db.VarChar(4000)
+  version   Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt, id])
+  @@index([authorId])
 }

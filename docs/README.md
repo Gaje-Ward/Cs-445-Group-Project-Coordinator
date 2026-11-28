@@ -9,6 +9,7 @@ These files cover the project plan and the work completed so far:
 - [Sprint 3 progress](SPRINT_3.md) covers teammates, task management, and verification results.
 - [Sprint 4 progress](SPRINT_4.md) covers completion summaries and overdue work.
 - [Sprint 5 files](SPRINT_5.md) covers private uploads and downloads.
+- [Sprint 6 discussion](SPRINT_6.md) covers project comments and moderation.
 - [Site administration](ADMIN.md) covers global read access and account provisioning.
 - [Dependency audit](DEPENDENCY_AUDIT.md) explains the findings from the October 8 dependency review.
 - [Architecture](ARCHITECTURE.md) explains how the application, authentication, and database fit together.
