@@ -56,4 +56,12 @@ textarea {
     max-width: 32rem;
     justify-self: end;
   }
+
+  .project-team-sidebar {
+    grid-column: 3;
+    grid-row: 1;
+    width: 100%;
+    max-width: 24rem;
+    justify-self: start;
+  }
 }

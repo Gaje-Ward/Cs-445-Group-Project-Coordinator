@@ -141,7 +141,7 @@ export function ProjectMembers({
           <p id="teammate-help" className="mb-3 text-sm text-slate-600">
             Your teammate needs an account before you can add them.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3">
             <input
               id="teammate-email"
               name="email"

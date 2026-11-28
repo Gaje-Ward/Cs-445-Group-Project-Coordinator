@@ -17,6 +17,7 @@ import { ProjectDiscussion } from "@/components/project-discussion";
 import { ideas } from "@/lib/ideas";
 import { ideaPageSchema } from "@/lib/idea-validation";
 import { ProjectIdeas } from "@/components/project-ideas";
+import { ProjectViews } from "@/components/project-views";
 export const dynamic = "force-dynamic";
 export default async function ProjectPage({
   params,
@@ -96,51 +97,55 @@ export default async function ProjectPage({
               </Link>
             )}
           </div>
-          <ProjectTasks
-            projectId={id}
-            members={team}
-            tasks={projectTasks.map((task) => ({
-              ...task,
-              dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
-            }))}
-            canDelete={project.role === "OWNER"}
-            today={calendar.today}
-            calendarLabel={calendar.label}
-          />
-          <ProjectFiles
-            projectId={id}
-            items={projectFiles.map(
-              ({ id, name, size, uploaderId, uploaderName }) => ({
-                id,
-                name,
-                size,
-                uploaderId,
-                uploaderName,
-              }),
-            )}
-            userId={user.id}
-            isOwner={project.role === "OWNER"}
-          />
-          <ProjectIdeas
-            projectId={id}
-            userId={user.id}
-            isOwner={project.role === "OWNER"}
-            requestedPage={requestedIdeaPage}
-            discussionPage={discussion.page}
-            calendarLabel={calendar.label}
-            data={{
-              ...proposals,
-              items: proposals.items.map((idea) => ({
-                ...idea,
-                createdAt: idea.createdAt.toISOString(),
-                createdLabel: formatCommentTime.format(idea.createdAt),
-              })),
-            }}
-          />
-          <ProjectMembers
-            projectId={id}
-            members={team}
-            canManage={project.role === "OWNER"}
+          <ProjectViews
+            initialView={query.ideasPage !== undefined ? "ideas" : "overview"}
+            overview={
+              <>
+                <ProjectTasks
+                  projectId={id}
+                  members={team}
+                  tasks={projectTasks.map((task) => ({
+                    ...task,
+                    dueDate: task.dueDate?.toISOString().slice(0, 10) ?? null,
+                  }))}
+                  canDelete={project.role === "OWNER"}
+                  today={calendar.today}
+                  calendarLabel={calendar.label}
+                />
+                <ProjectFiles
+                  projectId={id}
+                  items={projectFiles.map(
+                    ({ id, name, size, uploaderId, uploaderName }) => ({
+                      id,
+                      name,
+                      size,
+                      uploaderId,
+                      uploaderName,
+                    }),
+                  )}
+                  userId={user.id}
+                  isOwner={project.role === "OWNER"}
+                />
+              </>
+            }
+            ideas={
+              <ProjectIdeas
+                projectId={id}
+                userId={user.id}
+                isOwner={project.role === "OWNER"}
+                requestedPage={requestedIdeaPage}
+                discussionPage={discussion.page}
+                calendarLabel={calendar.label}
+                data={{
+                  ...proposals,
+                  items: proposals.items.map((idea) => ({
+                    ...idea,
+                    createdAt: idea.createdAt.toISOString(),
+                    createdLabel: formatCommentTime.format(idea.createdAt),
+                  })),
+                }}
+              />
+            }
           />
         </div>
         <aside
@@ -164,6 +169,16 @@ export default async function ProjectPage({
                 updatedLabel: formatCommentTime.format(comment.updatedAt),
               })),
             }}
+          />
+        </aside>
+        <aside
+          className="project-team-sidebar min-w-0"
+          aria-label="Project team"
+        >
+          <ProjectMembers
+            projectId={id}
+            members={team}
+            canManage={project.role === "OWNER"}
           />
         </aside>
       </div>
