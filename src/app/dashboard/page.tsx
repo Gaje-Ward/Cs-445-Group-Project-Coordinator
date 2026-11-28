@@ -5,11 +5,13 @@ import { LogoutButton } from "@/components/logout-button";
 import { ProjectProgress } from "@/components/project-progress";
 import { getProjectCalendar } from "@/lib/project-calendar";
 import { isPastDate } from "@/lib/project-progress";
+import { admin } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 export default async function Dashboard() {
   const user = await requireUser();
   const calendar = getProjectCalendar();
   const items = await projects.list(user.id, calendar.today);
+  const isAdmin = await admin.allowed(user.id);
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -19,7 +21,17 @@ export default async function Dashboard() {
           </p>
           <h1 className="text-3xl font-bold">Welcome, {user.name}.</h1>
         </div>
-        <LogoutButton />
+        <div className="flex flex-wrap items-center gap-4">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="font-semibold text-indigo-700 underline"
+            >
+              Admin dashboard
+            </Link>
+          )}
+          <LogoutButton />
+        </div>
       </div>
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold">Your projects</h2>

@@ -30,6 +30,9 @@ beforeAll(async () => {
 afterAll(async () => {
   // Delete only this test's projects first; user deletion is deliberately restricted.
   await db.project.deleteMany({ where: { id: { in: projectIds } } });
+  await db.deletionRecord.deleteMany({
+    where: { projectId: { in: projectIds } },
+  });
   await db.user.deleteMany({ where: { id: { in: ids } } });
   await db.$disconnect();
 });

@@ -34,6 +34,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.project.deleteMany({ where: { id: { in: projectIds } } });
+  await db.deletionRecord.deleteMany({
+    where: { projectId: { in: projectIds } },
+  });
   await db.user.deleteMany({
     where: { id: { in: users.map((user) => user.id) } },
   });

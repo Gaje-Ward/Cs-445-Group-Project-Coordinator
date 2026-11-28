@@ -14,6 +14,8 @@ export async function anonymousProjectChecks(request: Requester) {
     "/api/projects/missing/tasks",
     "/api/projects/missing/files",
     "/api/projects/missing/files/missing",
+    "/api/admin",
+    "/api/admin/files/missing",
   ])
     assert.equal((await request(route)).status, 401);
   for (const [route, method] of [
@@ -33,6 +35,7 @@ export async function anonymousProjectChecks(request: Requester) {
     "/projects/new",
     "/projects/missing",
     "/projects/missing/edit",
+    "/admin",
   ]) {
     const response = await request(route);
     const body = await response.text();
@@ -482,7 +485,9 @@ export async function projectHttpChecks({
     );
   } finally {
     await db.project.deleteMany({ where: { id: { in: projectIds } } });
-
+    await db.deletionRecord.deleteMany({
+      where: { projectId: { in: projectIds } },
+    });
     await db.user.deleteMany({ where: { id: { in: userIds } } });
   }
 }
