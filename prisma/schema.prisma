@@ -20,6 +20,7 @@ model User {
   memberships    ProjectMember[]
   uploads        ProjectFile[]
   comments       Comment[]
+  ideas          Idea[]
 }
 
 enum ProjectRole {
@@ -38,9 +39,11 @@ model Project {
   tasks       Task[]
   files       ProjectFile[]
   comments    Comment[]
+  ideas       Idea[]
 }
 
 model ProjectMember {
+  votes         IdeaVote[]
   projectId     String
   userId        String
   role          ProjectRole @default(MEMBER)
@@ -131,4 +134,31 @@ model Comment {
 
   @@index([projectId, createdAt, id])
   @@index([authorId])
+}
+
+model Idea {
+  id        String     @id @default(cuid())
+  projectId String
+  authorId  String?
+  title     String     @db.VarChar(120)
+  body      String     @db.VarChar(4000)
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  votes     IdeaVote[]
+
+  @@unique([projectId, id])
+  @@index([projectId, createdAt, id])
+  @@index([authorId])
+}
+
+model IdeaVote {
+  projectId String
+  ideaId    String
+  userId    String
+  idea      Idea          @relation(fields: [projectId, ideaId], references: [projectId, id], onDelete: Cascade)
+  member    ProjectMember @relation(fields: [projectId, userId], references: [projectId, userId], onDelete: Cascade)
+
+  @@id([ideaId, userId])
+  @@index([projectId, userId])
 }

@@ -38,6 +38,8 @@ See [the implementation report](docs/IMPLEMENTATION.md) for the results and rema
 
 Sprint 6 adds Discussion to project pages. Members can post comments and edit their own text; authors and project owners can delete comments after confirmation. Comments show author names and posting times, with older discussions available through pagination. Apply migrations with npm.cmd run db:deploy before trying it. See [the Sprint 6 notes](docs/SPRINT_6.md) for permissions and verification.
 
+Sprint 7 adds Ideas to project pages. Members can submit proposals, vote once on each idea, and remove their votes. Authors and project owners can delete an idea after confirmation. Posted proposals cannot be edited. Apply migrations with npm.cmd run db:deploy before opening project pages. See [the Sprint 7 notes](docs/SPRINT_7.md) for voting rules and verification.
+
 ## Technology stack
 
 Versions recorded during the initial setup on October 8, 2026:
@@ -162,7 +164,7 @@ src/app/                  Pages and Route Handlers
 src/components/           Interactive authentication and project forms
 src/lib/                  Validation, persistence, passwords, auth, sessions
 src/types/                Session type extension
-prisma/schema.prisma      Account, project, membership, task, file, and comment schema
+prisma/schema.prisma      Accounts, projects, shared work, and idea votes
 prisma/migrations/        Versioned SQL migrations
 scripts/                  Safe env/test setup and HTTP verification
 tests/unit/               Isolated logic and UI tests

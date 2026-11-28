@@ -2,7 +2,7 @@
 
 ## Scope and users
 
-Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, MVP-04 progress summaries, MVP-05 project files, and MVP-06 project discussion. Other backlog features remain planned.
+Group Project Coordinator is for students working on group assignments. The current implementation covers account registration, authentication, MVP-01 project creation/viewing/editing, MVP-02 teammate management, MVP-03 tasks, MVP-04 progress summaries, MVP-05 project files, MVP-06 project discussion, and MVP-07 ideas and voting. Other backlog features remain planned.
 
 ## Current functional requirements
 
@@ -102,6 +102,14 @@ Current members can post plain-text comments of 1–4,000 characters on a projec
 Only the author can edit a comment. The author or project owner can delete it after confirmation. Server checks enforce current active membership; administrator status alone does not grant discussion access. Version checks reject stale edits and deletions. Responses exclude account emails and private fields.
 
 Comments survive membership removal and account deletion, with deleted authors shown as “Former user.” Project deletion removes their content. Automated checks passed; local visual and keyboard review remain pending. See [Sprint 6](SPRINT_6.md).
+
+## Ideas and voting requirements — MVP-07
+
+Current members can submit project ideas with a title of 2–120 characters and a plain-text description of 1–4,000 characters. Lists show author names, posting times, vote totals, and the caller's vote state, with 25 ideas per page. Posted proposals cannot be edited. Authors and project owners can delete them after confirmation.
+
+Each member may cast or remove one vote per idea. Stored votes are unique, and retrying a request does not add another vote. Requests require active project membership, including for administrators. Votes are removed when membership is removed; disabling an account preserves its existing votes. Deleted accounts' proposals remain as shared work under “Former user.” Project deletion removes ideas and votes.
+
+Automated checks passed; local visual and keyboard review remain pending. See [Sprint 7](SPRINT_7.md).
 
 ## MVP status
 

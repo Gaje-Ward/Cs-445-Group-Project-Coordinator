@@ -10,6 +10,7 @@ These files cover the project plan and the work completed so far:
 - [Sprint 4 progress](SPRINT_4.md) covers completion summaries and overdue work.
 - [Sprint 5 files](SPRINT_5.md) covers private uploads and downloads.
 - [Sprint 6 discussion](SPRINT_6.md) covers project comments and moderation.
+- [Sprint 7 ideas](SPRINT_7.md) covers proposals and member voting.
 - [Site administration](ADMIN.md) covers global read access and account provisioning.
 - [Dependency audit](DEPENDENCY_AUDIT.md) explains the findings from the October 8 dependency review.
 - [Architecture](ARCHITECTURE.md) explains how the application, authentication, and database fit together.

@@ -28,6 +28,22 @@ afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
+it("keeps the selected ideas page when navigating discussion", () => {
+  render(
+    <ProjectDiscussion
+      projectId="p1"
+      userId="peer"
+      canModerate={false}
+      calendarLabel="Central Time"
+      ideasPage={4}
+      data={{ ...data, page: 1, pageCount: 2, total: 26 }}
+    />,
+  );
+  expect(screen.getByRole("link", { name: "Older comments" })).toHaveAttribute(
+    "href",
+    "/projects/p1?commentsPage=2&ideasPage=4#project-discussion",
+  );
+});
 it("renders plain text, author/times, and member-only controls", () => {
   const { container } = render(
     <ProjectDiscussion

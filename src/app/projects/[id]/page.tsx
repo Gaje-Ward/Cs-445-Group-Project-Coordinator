@@ -14,6 +14,9 @@ import { ProjectFiles } from "@/components/project-files";
 import { comments } from "@/lib/comments";
 import { commentPageSchema } from "@/lib/comment-validation";
 import { ProjectDiscussion } from "@/components/project-discussion";
+import { ideas } from "@/lib/ideas";
+import { ideaPageSchema } from "@/lib/idea-validation";
+import { ProjectIdeas } from "@/components/project-ideas";
 export const dynamic = "force-dynamic";
 export default async function ProjectPage({
   params,
@@ -30,6 +33,10 @@ export default async function ProjectPage({
     typeof query.commentsPage === "string" ? query.commentsPage : 1,
   );
   const requestedCommentPage = parsedPage.success ? parsedPage.data : 1;
+  const parsedIdeaPage = ideaPageSchema.safeParse(
+    typeof query.ideasPage === "string" ? query.ideasPage : 1,
+  );
+  const requestedIdeaPage = parsedIdeaPage.success ? parsedIdeaPage.data : 1;
   const formatCommentTime = new Intl.DateTimeFormat("en-US", {
     timeZone: calendar.timeZone,
     dateStyle: "medium",
@@ -40,12 +47,14 @@ export default async function ProjectPage({
   let projectTasks;
   let projectFiles;
   let discussion;
+  let proposals;
   try {
     project = await projects.get(user.id, id);
     team = await members.list(user.id, id);
     projectTasks = await tasks.list(user.id, id);
     projectFiles = await files.list(user.id, id);
     discussion = await comments.list(user.id, id, requestedCommentPage);
+    proposals = await ideas.list(user.id, id, requestedIdeaPage);
   } catch (error) {
     if (error instanceof ProjectNotFoundError) notFound();
     throw error;
@@ -112,6 +121,22 @@ export default async function ProjectPage({
             userId={user.id}
             isOwner={project.role === "OWNER"}
           />
+          <ProjectIdeas
+            projectId={id}
+            userId={user.id}
+            isOwner={project.role === "OWNER"}
+            requestedPage={requestedIdeaPage}
+            discussionPage={discussion.page}
+            calendarLabel={calendar.label}
+            data={{
+              ...proposals,
+              items: proposals.items.map((idea) => ({
+                ...idea,
+                createdAt: idea.createdAt.toISOString(),
+                createdLabel: formatCommentTime.format(idea.createdAt),
+              })),
+            }}
+          />
           <ProjectMembers
             projectId={id}
             members={team}
@@ -127,6 +152,7 @@ export default async function ProjectPage({
             userId={user.id}
             canModerate={project.role === "OWNER"}
             requestedPage={requestedCommentPage}
+            ideasPage={proposals.page}
             calendarLabel={calendar.label}
             data={{
               ...discussion,

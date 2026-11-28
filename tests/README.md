@@ -6,6 +6,12 @@ Validation and component tests check text limits, protected fields, literal HTML
 
 PostgreSQL tests exercise actual membership checks, owner moderation, competing edits, revoked access, pagination, and account/project deletion. HTTP checks use independent cookie jars to post and edit through real sessions, reject unsafe requests, render escaped text, and confirm that removed or disabled users lose access. Local visual and keyboard review remain separate checks.
 
+## Ideas and voting coverage
+
+Unit/UI tests cover text validation, literal HTML display, failed drafts, explicit vote states, deletion confirmation, and independent idea/discussion pagination. PostgreSQL tests exercise real foreign keys, concurrent duplicate requests, vote removal, owner moderation, project isolation, former authors, and cascade cleanup. Removing a member clears their votes; disabling a member blocks requests while retaining existing votes.
+
+HTTP checks use independent signed-in sessions to submit proposals, retry concurrent votes, remove votes, render counts and escaped text, and reject unsafe or unauthorized requests. The fixtures live only in the guarded test database. Local visual and keyboard review remain separate checks.
+
 ## Administrator coverage
 
 Account-management tests cover confirmation forms, password hashing, disabled logins, current session-version checks, and old cookies after reactivation. Database tests verify access-change serialization and permanent deletion with shared work preserved. Concurrent project creation cannot leave an unreviewed ownerless project. Deleting an owner during an upload prevents the unfinished file from becoming available. HTTP checks use an independent cookie jar to verify real login, disable/reactivate, reset, and delete behavior.

@@ -26,6 +26,7 @@ export function ProjectDiscussion({
   canModerate,
   data,
   requestedPage = 1,
+  ideasPage = 1,
   calendarLabel,
 }: {
   projectId: string;
@@ -33,6 +34,7 @@ export function ProjectDiscussion({
   canModerate: boolean;
   data: DiscussionPage;
   requestedPage?: number;
+  ideasPage?: number;
   calendarLabel: string;
 }) {
   const router = useRouter();
@@ -46,6 +48,7 @@ export function ProjectDiscussion({
     [conflict, setConflict] = useState(false);
   const path = "/api/projects/" + projectId + "/comments";
   const busy = !!pending || editing !== null || deleting !== null;
+  const ideaQuery = ideasPage > 1 ? "&ideasPage=" + ideasPage : "";
   async function change(
     method: "POST" | "PATCH" | "DELETE",
     id: string,
@@ -90,7 +93,11 @@ export function ProjectDiscussion({
       setMessage("Comment posted.");
       if (requestedPage !== 1)
         router.push(
-          "/projects/" + projectId + "?commentsPage=1#project-discussion",
+          "/projects/" +
+            projectId +
+            "?commentsPage=1" +
+            ideaQuery +
+            "#project-discussion",
         );
       else router.refresh();
     }
@@ -355,6 +362,7 @@ export function ProjectDiscussion({
                   projectId +
                   "?commentsPage=" +
                   (data.page - 1) +
+                  ideaQuery +
                   "#project-discussion"
                 }
                 className="font-semibold text-indigo-700 underline"
@@ -372,6 +380,7 @@ export function ProjectDiscussion({
                   projectId +
                   "?commentsPage=" +
                   (data.page + 1) +
+                  ideaQuery +
                   "#project-discussion"
                 }
                 className="font-semibold text-indigo-700 underline"

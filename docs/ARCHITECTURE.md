@@ -112,6 +112,14 @@ GET and POST /api/projects/[id]/comments list and create comments. PATCH and DEL
 
 The project server page formats timestamps in the configured application time zone. ProjectDiscussion renders plain text and preserves drafts after failed requests. Refreshing retrieves other members' changes; the feature does not use live subscriptions. See [Sprint 6](SPRINT_6.md).
 
+## Ideas and votes
+
+Idea belongs to a project and optionally to its author. IdeaVote uses a composite primary key of ideaId/userId and composite foreign keys to the idea and ProjectMember. These constraints prevent duplicate votes and cross-project relationships. Removing a membership cascades its votes; deleting an author preserves ideas with a null author. Project deletion cascades both proposals and votes.
+
+The ideas service follows the user-before-project lock order and holds current membership during each operation. Voting takes a row lock on the idea and writes the explicit desired state. Repeated vote requests remain idempotent. The list selects bounded proposal fields, counts saved votes, and returns only the caller's vote state. Members can vote on any idea in their project; authors and owners can delete proposals. There is no editing endpoint.
+
+GET and POST /api/projects/[id]/ideas list and create proposals. DELETE /api/projects/[id]/ideas/[ideaId] removes an authorized proposal. PUT /api/projects/[id]/ideas/[ideaId]/vote accepts a boolean voted field. Mutations reuse existing JSON origin and size checks. ProjectIdeas renders escaped text and retains failed drafts; pagination preserves the Discussion selection. See [Sprint 7](SPRINT_7.md).
+
 ## Site administration
 
 User.isAdmin defaults to false and is independent of project roles. A trusted local provisioning command grants or revokes it; public registration cannot set it. Admin permissions are read from the database for each request, rather than stored as authorization claims in the JWT. The admin API wrapper and services both verify the session user's current flag. The dashboard conditionally links to /admin after the same lookup.
