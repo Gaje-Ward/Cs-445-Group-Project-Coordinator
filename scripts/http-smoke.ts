@@ -8,7 +8,7 @@ import { randomUUID, randomBytes } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { testDatabaseUrl } from "./test-database";
-
+import { adminHttpChecks } from "./admin-http-checks";
 import {
   anonymousProjectChecks,
   projectHttpChecks,
@@ -217,7 +217,14 @@ async function main() {
       base,
       owner: { id: identity.id, email, password: input.password },
     });
-
+    await adminHttpChecks({
+      request,
+      csrf,
+      db,
+      base,
+      ownerId: identity.id,
+      storageRoot,
+    });
     const csrfToken = await csrf();
     const signedOut = await request("/api/auth/signout", {
       method: "POST",
