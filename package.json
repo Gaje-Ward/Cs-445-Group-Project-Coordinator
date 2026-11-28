@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "files:cleanup": "node --conditions=react-server --import tsx scripts/cleanup-files.ts",
     "db:test:setup": "tsx scripts/setup-test-db.ts",
     "test:http": "tsx scripts/http-smoke.ts",
     "format": "prettier --write .",

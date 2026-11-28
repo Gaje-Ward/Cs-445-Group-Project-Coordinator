@@ -9,6 +9,8 @@ import { ProjectNotFoundError } from "@/lib/project-service";
 import { notFound } from "next/navigation";
 import { getProjectCalendar } from "@/lib/project-calendar";
 import { isPastDate } from "@/lib/project-progress";
+import { files } from "@/lib/files";
+import { ProjectFiles } from "@/components/project-files";
 export const dynamic = "force-dynamic";
 export default async function ProjectPage({
   params,
@@ -21,10 +23,12 @@ export default async function ProjectPage({
   let project;
   let team;
   let projectTasks;
+  let projectFiles;
   try {
     project = await projects.get(user.id, id);
     team = await members.list(user.id, id);
     projectTasks = await tasks.list(user.id, id);
+    projectFiles = await files.list(user.id, id);
   } catch (error) {
     if (error instanceof ProjectNotFoundError) notFound();
     throw error;
@@ -74,6 +78,20 @@ export default async function ProjectPage({
         canDelete={project.role === "OWNER"}
         today={calendar.today}
         calendarLabel={calendar.label}
+      />
+      <ProjectFiles
+        projectId={id}
+        items={projectFiles.map(
+          ({ id, name, size, uploaderId, uploaderName }) => ({
+            id,
+            name,
+            size,
+            uploaderId,
+            uploaderName,
+          }),
+        )}
+        userId={user.id}
+        isOwner={project.role === "OWNER"}
       />
       <ProjectMembers
         projectId={id}

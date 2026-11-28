@@ -5,10 +5,11 @@ import { ZodError } from "zod";
 import { ProjectNotFoundError } from "./project-service";
 import { MemberChangeError } from "./member-service";
 import { TaskNotFoundError, TaskAssignmentError } from "./task-service";
+import { FileError } from "./file-validation";
 
 export const projectReply = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
-class RequestError extends Error {
+export class RequestError extends Error {
   constructor(
     message: string,
     readonly status: number,
@@ -25,6 +26,8 @@ export async function projectRequest(
       return projectReply({ error: "Please log in." }, 401);
     return await action(session.user.id);
   } catch (error) {
+    if (error instanceof FileError)
+      return projectReply({ error: error.message }, error.status);
     if (error instanceof TaskNotFoundError)
       return projectReply({ error: error.message }, 404);
     if (error instanceof TaskAssignmentError)
